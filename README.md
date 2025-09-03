@@ -66,4 +66,4 @@ Uma ferramenta simples e ágil para contagem manual de documentos durante o proc
 
 ---
 
-Desenvolvido por **Ryan Cristian** - Gestão da Informação.
+Desenvolvido por **Ryan Cristian** - Desenvolvedor Junior.
