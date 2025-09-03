@@ -180,22 +180,8 @@ html.dark-mode .status-baixado .status-display { color: #6ee7b7; }
 footer { text-align: center; margin-top: 40px; padding: 20px; color: #94a3b8; font-size: 14px; border-top: 1px solid var(--cor-borda); }
 
 /* --- ESTILOS PARA ABAS E CONTADOR --- */
-.tabs {
-    display: flex;
-    border-bottom: 2px solid var(--cor-borda);
-    margin-bottom: 24px;
-}
-.tab-link {
-    padding: 12px 24px;
-    cursor: pointer;
-    background: none;
-    border: none;
-    border-bottom: 3px solid transparent;
-    font-size: 16px;
-    font-weight: 600;
-    color: #64748b;
-    transition: all 0.3s;
-}
+.tabs { display: flex; border-bottom: 2px solid var(--cor-borda); margin-bottom: 24px; }
+.tab-link { padding: 12px 24px; cursor: pointer; background: none; border: none; border-bottom: 3px solid transparent; font-size: 16px; font-weight: 600; color: #64748b; transition: all 0.3s; }
 .tab-link:hover { color: var(--cor-primaria); }
 .tab-link.active { color: var(--cor-primaria); border-bottom-color: var(--cor-primaria); }
 .tab-content { display: none; }
