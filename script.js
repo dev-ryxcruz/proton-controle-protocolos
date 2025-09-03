@@ -167,7 +167,7 @@
 
         elements.timerToggle.addEventListener('click', () => isTimerRunning ? pauseTimer() : startTimer());
         elements.timerReset.addEventListener('click', resetTimer);
-
+        
         elements.btnShowShortcuts.addEventListener('click', () => elements.keyboardShortcuts.classList.toggle('visible'));
 
         const setupFixableField = (inputEl, fixBtn, changeBtn, storageKey) => {
@@ -581,7 +581,7 @@
                 doc.text(`Página 1`, 190, pageHeight - 10);
                 doc.save(`relatorio-digitalizacao-${dataAtual.replace(/\//g, '-')}.pdf`);
             };
-            if (logoElement.complete) criarPDF(); else logoElement.onload = criarPDF;
+            if (logoElement.complete && logoElement.naturalHeight !== 0) criarPDF(); else logoElement.onload = criarPDF;
         });
         
         document.getElementById('checkbox').addEventListener('change', () => {
