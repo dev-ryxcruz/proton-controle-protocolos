@@ -3,16 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PROTON</title>
+    <meta name="description" content="PROTON - Sistema de controle de protocolos e digitalização">
+    <meta name="author" content="Ryan Cristian">
+    <title>PROTON - Controle de Protocolos</title>
     <link rel="icon" type="image/png" href="proton-logo.png"> 
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style">
+    <link rel="preload" href="style.css" as="style">
     
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="toast-container" id="toastContainer"></div>
-    <div class="keyboard-shortcuts" id="keyboardShortcuts">
-        <h4><i class="fas fa-keyboard"></i> Atalhos de Teclado</h4>
+    <!-- Loading overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner">
+            <i class="fas fa-atom fa-spin"></i>
+            <p>Carregando PROTON...</p>
+        </div>
+    </div>
+
+    <!-- Toast notifications container -->
+    <div class="toast-container" id="toastContainer" role="alert" aria-live="polite"></div>
+    
+    <!-- Keyboard shortcuts panel -->
+    <div class="keyboard-shortcuts" id="keyboardShortcuts" role="dialog" aria-labelledby="shortcuts-title">
+        <h4 id="shortcuts-title"><i class="fas fa-keyboard"></i> Atalhos de Teclado</h4>
         <div id="proton-shortcuts">
             <div class="shortcut"><span>Adicionar Protocolo</span><span class="key">Ctrl + A</span></div>
             <div class="shortcut"><span>Buscar</span><span class="key">Ctrl + F</span></div>
@@ -26,59 +43,82 @@
         <hr style="border-color: var(--cor-borda); margin: 5px 0;">
         <div class="shortcut"><span>Modo Escuro</span><span class="key">Ctrl + D</span></div>
         <div class="shortcut"><span>Mostrar/Ocultar Atalhos</span><span class="key">Ctrl + ?</span></div>
+        <button class="close-shortcuts" aria-label="Fechar atalhos" onclick="document.getElementById('keyboardShortcuts').classList.remove('visible')">
+            <i class="fas fa-times"></i>
+        </button>
     </div>
-    <img id="logo-para-pdf" src="proton-logo.png" style="display: none;">
+    
+    <!-- Hidden logo for PDF generation -->
+    <img id="logo-para-pdf" src="proton-logo.png" alt="Logo PROTON" style="display: none;">
 
     <div class="container">
-        <div class="header">
+        <header class="header">
             <h1 class="logo-title">
                 <img src="proton-logo.png" alt="Logo PROTON" class="header-logo">
                 PROTON
             </h1>
             <div class="header-controls">
+                <!-- Productivity timer -->
                 <div class="productivity-timer" id="productivityTimer">
-                   <i class="fas fa-clock"></i>
-                   <span id="timerDisplay">00:00:00</span>
-                   <button id="timerToggle" title="Iniciar/Pausar" aria-label="Iniciar ou Pausar o cronômetro"><i class="fas fa-play" id="timerIcon"></i></button>
-                   <button id="timerReset" title="Reiniciar" aria-label="Reiniciar o cronômetro"><i class="fas fa-undo"></i></button>
+                   <i class="fas fa-clock" aria-hidden="true"></i>
+                   <span id="timerDisplay" aria-label="Tempo decorrido">00:00:00</span>
+                   <button id="timerToggle" title="Iniciar/Pausar cronômetro" aria-label="Iniciar ou pausar o cronômetro">
+                       <i class="fas fa-play" id="timerIcon" aria-hidden="true"></i>
+                   </button>
+                   <button id="timerReset" title="Reiniciar cronômetro" aria-label="Reiniciar o cronômetro">
+                       <i class="fas fa-undo" aria-hidden="true"></i>
+                   </button>
                 </div>
+                
+                <!-- Help button -->
                 <button id="btnShowShortcuts" class="help-button" title="Mostrar/Ocultar Atalhos de Teclado" aria-label="Mostrar ou ocultar atalhos de teclado">
-                    <i class="fas fa-question"></i>
+                    <i class="fas fa-question" aria-hidden="true"></i>
                 </button>
+                
+                <!-- Theme toggle -->
                 <div class="theme-switch-wrapper">
                     <label class="theme-switch" for="checkbox">
-                        <input type="checkbox" id="checkbox" aria-label="Alternar tema claro/escuro" />
-                        <div class="slider"></div>
+                        <input type="checkbox" id="checkbox" aria-label="Alternar entre tema claro e escuro" />
+                        <div class="slider" role="switch"></div>
                     </label>
                 </div>
             </div>
-        </div>
+        </header>
 
-        <div class="tabs">
-            <button class="tab-link active" data-tab="tab-proton">
-                <i class="fas fa-file-alt"></i> Controle de Protocolos
+        <!-- Navigation tabs -->
+        <nav class="tabs" role="tablist">
+            <button class="tab-link active" data-tab="tab-proton" role="tab" aria-selected="true" aria-controls="tab-proton">
+                <i class="fas fa-file-alt" aria-hidden="true"></i> Controle de Protocolos
             </button>
-            <button class="tab-link" data-tab="tab-contador">
-                <i class="fas fa-calculator"></i> Contador de Digitalização
+            <button class="tab-link" data-tab="tab-contador" role="tab" aria-selected="false" aria-controls="tab-contador">
+                <i class="fas fa-calculator" aria-hidden="true"></i> Contador de Digitalização
             </button>
-        </div>
+        </nav>
 
-        <div id="tab-proton" class="tab-content active">
-            <div class="setup-section">
-                <div class="section-title"><i class="fas fa-cog"></i> Configuração do Dia</div>
+        <!-- Proton tab content -->
+        <main id="tab-proton" class="tab-content active" role="tabpanel" aria-labelledby="tab-proton">
+            <!-- Configuration section -->
+            <section class="setup-section">
+                <div class="section-title">
+                    <i class="fas fa-cog" aria-hidden="true"></i> Configuração do Dia
+                </div>
                 <div class="form-grid">
                     <div class="input-group">
                         <div class="form-group">
-                            <label for="conferente"><i class="fas fa-user"></i> Seu Nome (Conferente)</label>
-                            <input type="text" id="conferente" placeholder="Digite seu nome">
+                            <label for="conferente">
+                                <i class="fas fa-user" aria-hidden="true"></i> Seu Nome (Conferente)
+                            </label>
+                            <input type="text" id="conferente" placeholder="Digite seu nome" autocomplete="name" required>
                         </div>
                         <button id="btnFixarConferente" class="btn-secondary">Fixar Nome</button>
                         <button id="btnTrocarConferente" class="btn-secondary" style="display: none;">Trocar</button>
                     </div>
                     <div class="input-group">
                         <div class="form-group">
-                            <label for="convenio"><i class="fas fa-handshake"></i> Convênio do Dia</label>
-                            <select id="convenio">
+                            <label for="convenio">
+                                <i class="fas fa-handshake" aria-hidden="true"></i> Convênio do Dia
+                            </label>
+                            <select id="convenio" required>
                                 <option value="">-- Escolha um convênio --</option>
                                 <option value="Unimed">Unimed</option>
                                 <option value="Intercâmbio">Intercâmbio</option>
@@ -92,119 +132,281 @@
                     </div>
                 </div>
                 <div class="form-group full-width">
-                    <label for="dataRecebimento"><i class="fas fa-calendar"></i> Data de Referência dos Protocolos</label>
+                    <label for="dataRecebimento">
+                        <i class="fas fa-calendar" aria-hidden="true"></i> Data de Referência dos Protocolos
+                    </label>
                     <input type="date" id="dataRecebimento" required>
                 </div>
-            </div>
-            <div class="setup-section">
-                <div class="section-title"><i class="fas fa-plus-circle"></i> Adicionar Novos Protocolos</div>
+            </section>
+
+            <!-- Add protocols section -->
+            <section class="setup-section">
+                <div class="section-title">
+                    <i class="fas fa-plus-circle" aria-hidden="true"></i> Adicionar Novos Protocolos
+                </div>
                 <div class="input-group">
                     <div class="form-group">
-                        <label for="numProtocolo"><i class="fas fa-hashtag"></i> Nº do Protocolo</label>
-                        <input type="text" id="numProtocolo" placeholder="Digite para adicionar um por um">
+                        <label for="numProtocolo">
+                            <i class="fas fa-hashtag" aria-hidden="true"></i> Nº do Protocolo
+                        </label>
+                        <input type="text" id="numProtocolo" placeholder="Digite para adicionar um por um" pattern="[0-9]+" inputmode="numeric">
+                        <div class="input-feedback" id="protocoloFeedback"></div>
                     </div>
-                    <button id="btnAdicionar" class="btn-primary"><i class="fas fa-plus"></i> Adicionar</button>
-                    <button id="btnAbrirModalLote" class="btn-warning"><i class="fas fa-layer-group"></i> Adicionar em Lote</button>
+                    <button id="btnAdicionar" class="btn-primary">
+                        <i class="fas fa-plus" aria-hidden="true"></i> Adicionar
+                    </button>
+                    <button id="btnAbrirModalLote" class="btn-warning">
+                        <i class="fas fa-layer-group" aria-hidden="true"></i> Adicionar em Lote
+                    </button>
                 </div>
-            </div>
-            <div class="search-filters">
-                <div class="section-title"><i class="fas fa-search"></i> Busca e Filtros</div>
+            </section>
+
+            <!-- Search and filters section -->
+            <section class="search-filters">
+                <div class="section-title">
+                    <i class="fas fa-search" aria-hidden="true"></i> Busca e Filtros
+                </div>
                 <div class="search-bar">
-                    <input type="text" id="searchInput" placeholder="Buscar por protocolo, convênio ou status...">
+                    <input type="text" id="searchInput" placeholder="Buscar por protocolo, convênio ou status..." aria-label="Campo de busca">
+                    <button id="btnClearSearch" class="clear-search-btn" title="Limpar busca" aria-label="Limpar campo de busca">
+                        <i class="fas fa-times" aria-hidden="true"></i>
+                    </button>
                 </div>
                 <div class="filters-grid">
-                    <div class="form-group"><label for="filterStatus"><i class="fas fa-filter"></i> Filtrar por Status</label><select id="filterStatus"><option value="">Todos os Status</option><option value="Pendente">Pendente</option><option value="Baixado">Baixado</option></select></div>
-                    <div class="form-group"><label for="filterConvenio"><i class="fas fa-filter"></i> Filtrar por Convênio</label><select id="filterConvenio"><option value="">Todos os Convênios</option></select></div>
-                    <div class="form-group"><label for="filterDate"><i class="fas fa-filter"></i> Filtrar por Data</label><input type="date" id="filterDate"></div>
-                    <button id="btnClearFilters" class="btn-danger" style="align-self: flex-end;"><i class="fas fa-times"></i> Limpar Filtros</button>
+                    <div class="form-group">
+                        <label for="filterStatus">
+                            <i class="fas fa-filter" aria-hidden="true"></i> Filtrar por Status
+                        </label>
+                        <select id="filterStatus">
+                            <option value="">Todos os Status</option>
+                            <option value="Pendente">Pendente</option>
+                            <option value="Baixado">Baixado</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="filterConvenio">
+                            <i class="fas fa-filter" aria-hidden="true"></i> Filtrar por Convênio
+                        </label>
+                        <select id="filterConvenio">
+                            <option value="">Todos os Convênios</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="filterDate">
+                            <i class="fas fa-filter" aria-hidden="true"></i> Filtrar por Data
+                        </label>
+                        <input type="date" id="filterDate">
+                    </div>
+                    <button id="btnClearFilters" class="btn-danger" style="align-self: flex-end;">
+                        <i class="fas fa-times" aria-hidden="true"></i> Limpar Filtros
+                    </button>
                 </div>
-            </div>
-            <div class="setup-section">
-                <div class="section-title"><i class="fas fa-chart-pie"></i> Dashboard e Estatísticas</div>
-                <div class="dashboard">
-                    <div class="stat-card"><div class="stat-icon"><i class="fas fa-list"></i></div><h4>Total na Fila</h4><p id="stat-total">0</p></div>
-                    <div class="stat-card"><div class="stat-icon"><i class="fas fa-check-circle"></i></div><h4>Processados</h4><p id="stat-processados">0</p></div>
-                    <div class="stat-card"><div class="stat-icon"><i class="fas fa-clock"></i></div><h4>Pendentes</h4><p id="stat-pendentes">0</p></div>
-                    <div class="stat-card"><div class="stat-icon"><i class="fas fa-percentage"></i></div><h4>Taxa de Conclusão</h4><p id="stat-taxa">0%</p></div>
-                    <div class="chart-card"><canvas id="tipoDocumentoChart"></canvas></div>
-                    <div class="progress-bar-container"><div class="progress-bar" id="progressBar">0%</div></div>
-                </div>
-            </div>
-            <div class="actions">
-                <button id="gerarExcel" class="btn-success"><i class="fas fa-file-excel"></i> Gerar Planilha Excel</button>
-                <button id="btnBackup" class="btn-info"><i class="fas fa-download"></i> Backup Dados</button>
-                <button id="btnRestore" class="btn-warning"><i class="fas fa-upload"></i> Restaurar Dados</button>
-                <button id="btnLimpar" class="btn-danger"><i class="fas fa-trash"></i> Limpar Todos os Dados</button>
-            </div>
-            <div class="table-container">
-                <table>
-                    <thead><tr>
-                        <th><i class="fas fa-hashtag"></i> Protocolo</th>
-                        <th><i class="fas fa-handshake"></i> Convênio</th>
-                        <th><i class="fas fa-info-circle"></i> Status</th>
-                        <th><i class="fas fa-calendar"></i> Data</th>
-                        <th><i class="fas fa-cogs"></i> Ações</th>
-                    </tr></thead>
-                    <tbody id="tabelaCorpo"></tbody>
-                </table>
-            </div>
-            <p id="mensagemVazia" style="text-align: center; padding: 20px; color: #777;">Nenhum documento processado ainda</p>
-            <button id="btnShowHistory" class="btn-info" style="margin-top: 20px;"><i class="fas fa-history"></i> Mostrar Histórico</button>
-            <div id="activityHistory" style="display: none; margin-top: 20px; background: var(--cor-setup); padding: 20px; border-radius: 12px; border: 1px solid var(--cor-borda);">
-                <h4><i class="fas fa-history"></i> Histórico de Atividades</h4><div id="activityList"></div>
-            </div>
-        </div>
+            </section>
 
-        <div id="tab-contador" class="tab-content">
-             <div class="setup-section">
-                <div class="section-title"><i class="fas fa-calculator"></i> Contador Manual</div>
+            <!-- Dashboard section -->
+            <section class="setup-section">
+                <div class="section-title">
+                    <i class="fas fa-chart-pie" aria-hidden="true"></i> Dashboard e Estatísticas
+                </div>
+                <div class="dashboard">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-list" aria-hidden="true"></i>
+                        </div>
+                        <h4>Total na Fila</h4>
+                        <p id="stat-total" aria-label="Total de protocolos na fila">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-check-circle" aria-hidden="true"></i>
+                        </div>
+                        <h4>Processados</h4>
+                        <p id="stat-processados" aria-label="Protocolos processados">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-clock" aria-hidden="true"></i>
+                        </div>
+                        <h4>Pendentes</h4>
+                        <p id="stat-pendentes" aria-label="Protocolos pendentes">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-percentage" aria-hidden="true"></i>
+                        </div>
+                        <h4>Taxa de Conclusão</h4>
+                        <p id="stat-taxa" aria-label="Taxa de conclusão">0%</p>
+                    </div>
+                    <div class="chart-card">
+                        <canvas id="tipoDocumentoChart" aria-label="Gráfico de tipos de documento"></canvas>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" id="progressBar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Action buttons -->
+            <section class="actions">
+                <button id="gerarExcel" class="btn-success">
+                    <i class="fas fa-file-excel" aria-hidden="true"></i> Gerar Planilha Excel
+                </button>
+                <button id="btnBackup" class="btn-info">
+                    <i class="fas fa-download" aria-hidden="true"></i> Backup Dados
+                </button>
+                <button id="btnRestore" class="btn-warning">
+                    <i class="fas fa-upload" aria-hidden="true"></i> Restaurar Dados
+                </button>
+                <button id="btnLimpar" class="btn-danger">
+                    <i class="fas fa-trash" aria-hidden="true"></i> Limpar Todos os Dados
+                </button>
+            </section>
+
+            <!-- Data table -->
+            <section class="table-container" role="region" aria-label="Tabela de protocolos">
+                <div class="table-wrapper">
+                    <table role="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">
+                                    <button class="sort-btn" data-column="protocolo" aria-label="Ordenar por protocolo">
+                                        <i class="fas fa-hashtag" aria-hidden="true"></i> Protocolo
+                                        <i class="fas fa-sort sort-icon" aria-hidden="true"></i>
+                                    </button>
+                                </th>
+                                <th scope="col">
+                                    <button class="sort-btn" data-column="convenio" aria-label="Ordenar por convênio">
+                                        <i class="fas fa-handshake" aria-hidden="true"></i> Convênio
+                                        <i class="fas fa-sort sort-icon" aria-hidden="true"></i>
+                                    </button>
+                                </th>
+                                <th scope="col">
+                                    <button class="sort-btn" data-column="status" aria-label="Ordenar por status">
+                                        <i class="fas fa-info-circle" aria-hidden="true"></i> Status
+                                        <i class="fas fa-sort sort-icon" aria-hidden="true"></i>
+                                    </button>
+                                </th>
+                                <th scope="col">
+                                    <button class="sort-btn" data-column="dataRecebimento" aria-label="Ordenar por data">
+                                        <i class="fas fa-calendar" aria-hidden="true"></i> Data
+                                        <i class="fas fa-sort sort-icon" aria-hidden="true"></i>
+                                    </button>
+                                </th>
+                                <th scope="col">
+                                    <i class="fas fa-cogs" aria-hidden="true"></i> Ações
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaCorpo"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Empty state message -->
+            <p id="mensagemVazia" class="empty-state" style="text-align: center; padding: 20px; color: #777;">
+                <i class="fas fa-inbox fa-3x" style="display: block; margin-bottom: 16px; opacity: 0.5;"></i>
+                Nenhum documento processado ainda
+            </p>
+
+            <!-- History section -->
+            <button id="btnShowHistory" class="btn-info" style="margin-top: 20px;">
+                <i class="fas fa-history" aria-hidden="true"></i> Mostrar Histórico
+            </button>
+            <div id="activityHistory" style="display: none; margin-top: 20px; background: var(--cor-setup); padding: 20px; border-radius: 12px; border: 1px solid var(--cor-borda);">
+                <h4><i class="fas fa-history" aria-hidden="true"></i> Histórico de Atividades</h4>
+                <div id="activityList"></div>
+            </div>
+        </main>
+
+        <!-- Counter tab content -->
+        <main id="tab-contador" class="tab-content" role="tabpanel" aria-labelledby="tab-contador">
+             <section class="setup-section">
+                <div class="section-title">
+                    <i class="fas fa-calculator" aria-hidden="true"></i> Contador Manual
+                </div>
                  <div class="main-content">
                     <div class="counter-card" id="ambulatorio-card">
                         <h2>Ambulatório</h2>
-                        <p class="count" id="ambulatorio-count">0</p>
-                        <button id="add-ambulatorio-btn" class="btn-primary">+1 Ambulatório</button>
+                        <p class="count" id="ambulatorio-count" aria-label="Contagem ambulatório">0</p>
+                        <div class="counter-buttons">
+                            <button id="remove-ambulatorio-btn" class="btn-danger" aria-label="Diminuir contagem ambulatório">-1</button>
+                            <button id="add-ambulatorio-btn" class="btn-primary" aria-label="Aumentar contagem ambulatório">+1</button>
+                        </div>
                     </div>
                     <div class="chart-container">
-                        <canvas id="contadorChart"></canvas>
+                        <canvas id="contadorChart" aria-label="Gráfico do contador"></canvas>
                     </div>
                     <div class="counter-card" id="internacao-card">
                         <h2>Internação</h2>
-                        <p class="count" id="internacao-count">0</p>
-                        <button id="add-internacao-btn" class="btn-success">+1 Internação</button>
+                        <p class="count" id="internacao-count" aria-label="Contagem internação">0</p>
+                        <div class="counter-buttons">
+                            <button id="remove-internacao-btn" class="btn-danger" aria-label="Diminuir contagem internação">-1</button>
+                            <button id="add-internacao-btn" class="btn-success" aria-label="Aumentar contagem internação">+1</button>
+                        </div>
                     </div>
                     <div class="counter-card" id="total-card">
                         <h2>TOTAL</h2>
-                        <p class="count" id="total-count">0</p>
+                        <p class="count" id="total-count" aria-label="Contagem total">0</p>
                     </div>
                 </div>
                 <div class="actions-area">
-                    <button id="pdf-btn" class="btn-info"><i class="fas fa-file-pdf"></i> Gerar Relatório PDF</button>
-                    <button id="reset-btn" class="btn-danger"><i class="fas fa-undo"></i> Zerar Contagem</button>
+                    <button id="pdf-btn" class="btn-info">
+                        <i class="fas fa-file-pdf" aria-hidden="true"></i> Gerar Relatório PDF
+                    </button>
+                    <button id="reset-btn" class="btn-danger">
+                        <i class="fas fa-undo" aria-hidden="true"></i> Zerar Contagem
+                    </button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Batch modal -->
+    <div id="modalLote" class="modal" role="dialog" aria-labelledby="modal-lote-title" aria-hidden="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-lote-title">
+                    <i class="fas fa-layer-group" aria-hidden="true"></i> Adicionar Protocolos em Lote
+                </h2>
+                <button id="fecharModal" class="close" aria-label="Fechar modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Cole a lista de números de protocolo abaixo (um por linha).</p>
+                <textarea id="listaProtocolosLote" rows="10" placeholder="Digite os protocolos, um por linha..." aria-label="Lista de protocolos"></textarea>
+                <div class="batch-info">
+                    <small><i class="fas fa-info-circle" aria-hidden="true"></i> Apenas números são aceitos. Protocolos duplicados serão ignorados.</small>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <div id="modalLote" class="modal">
-        <div class="modal-content">
-            <span id="fecharModal" class="close">&times;</span>
-            <h2><i class="fas fa-layer-group"></i> Adicionar Protocolos em Lote</h2>
-            <p>Cole a lista de números de protocolo abaixo (um por linha).</p>
-            <textarea id="listaProtocolosLote" rows="10" style="width: 100%;" placeholder="Digite os protocolos, um por linha..."></textarea>
-            <div class="actions">
-                <button id="btnConfirmarLote" class="btn-success"><i class="fas fa-check"></i> Adicionar à Fila</button>
+            <div class="modal-footer">
+                <button id="btnConfirmarLote" class="btn-success">
+                    <i class="fas fa-check" aria-hidden="true"></i> Adicionar à Fila
+                </button>
+                <button class="btn-secondary" onclick="document.getElementById('modalLote').style.display='none'">
+                    Cancelar
+                </button>
             </div>
         </div>
     </div>
-    <div id="modalConferencia" class="modal">
+
+    <!-- Conference modal -->
+    <div id="modalConferencia" class="modal" role="dialog" aria-labelledby="modal-conferencia-title" aria-hidden="true">
         <div class="modal-content">
-            <span id="fecharModalConferencia" class="close">&times;</span>
-            <h2><i class="fas fa-check-circle"></i> Conferir Protocolo</h2>
-            <div id="conferenciaForm"></div>
+            <div class="modal-header">
+                <h2 id="modal-conferencia-title">
+                    <i class="fas fa-check-circle" aria-hidden="true"></i> Conferir Protocolo
+                </h2>
+                <button id="fecharModalConferencia" class="close" aria-label="Fechar modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="conferenciaForm"></div>
+            </div>
         </div>
     </div>
-    <input type="file" id="fileRestore" accept=".json" style="display: none;">
 
+    <!-- Hidden file input for restore -->
+    <input type="file" id="fileRestore" accept=".json" style="display: none;" aria-label="Selecionar arquivo de backup">
+
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
@@ -212,8 +414,9 @@
 
     <footer style="text-align: center; margin-top: 40px; padding: 20px; color: #94a3b8; font-size: 14px; border-top: 1px solid var(--cor-borda);">
         <p>
-            Proton v1.2 | Desenvolvido por <strong>Ryan Cristian</strong> - Gestão da Informação
+            Proton v1.4 | Desenvolvido por <strong>Ryan Cristian</strong> - Desenvolvedor Junior
         </p>
     </footer>
 </body>
 </html>
+
