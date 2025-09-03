@@ -6,23 +6,28 @@
     <title>PROTON</title>
     <link rel="icon" type="image/png" href="proton-logo.png"> 
     
-    <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="toast-container" id="toastContainer"></div>
-    
     <div class="keyboard-shortcuts" id="keyboardShortcuts">
         <h4><i class="fas fa-keyboard"></i> Atalhos de Teclado</h4>
-        <div class="shortcut"><span>Adicionar Protocolo</span><span class="key">Ctrl + A</span></div>
-        <div class="shortcut"><span>Buscar</span><span class="key">Ctrl + F</span></div>
-        <div class="shortcut"><span>Exportar Excel</span><span class="key">Ctrl + E</span></div>
+        <div id="proton-shortcuts">
+            <div class="shortcut"><span>Adicionar Protocolo</span><span class="key">Ctrl + A</span></div>
+            <div class="shortcut"><span>Buscar</span><span class="key">Ctrl + F</span></div>
+            <div class="shortcut"><span>Exportar Excel</span><span class="key">Ctrl + E</span></div>
+        </div>
+        <div id="contador-shortcuts" style="display: none;">
+             <div class="shortcut"><span>+1 Ambulatório</span><span class="key">Alt + A</span></div>
+             <div class="shortcut"><span>+1 Internação</span><span class="key">Alt + I</span></div>
+             <div class="shortcut"><span>Zerar Contagem</span><span class="key">Alt + R</span></div>
+        </div>
+        <hr style="border-color: var(--cor-borda); margin: 5px 0;">
         <div class="shortcut"><span>Modo Escuro</span><span class="key">Ctrl + D</span></div>
         <div class="shortcut"><span>Mostrar/Ocultar Atalhos</span><span class="key">Ctrl + ?</span></div>
     </div>
+    <img id="logo-para-pdf" src="proton-logo.png" style="display: none;">
 
     <div class="container">
         <div class="header">
@@ -34,169 +39,149 @@
                 <div class="productivity-timer" id="productivityTimer">
                    <i class="fas fa-clock"></i>
                    <span id="timerDisplay">00:00:00</span>
-                   <button id="timerToggle" title="Iniciar/Pausar" style="background: none; border: none; color: white; cursor: pointer;">
-                      <i class="fas fa-play" id="timerIcon"></i>
-                   </button>
-                   <button id="timerReset" title="Reiniciar" style="background: none; border: none; color: white; cursor: pointer; margin-left: 5px;">
-                      <i class="fas fa-undo"></i>
-                   </button>
-               </div>
-                 <button id="btnShowShortcuts" class="help-button" title="Mostrar/Ocultar Atalhos de Teclado">
+                   <button id="timerToggle" title="Iniciar/Pausar" aria-label="Iniciar ou Pausar o cronômetro"><i class="fas fa-play" id="timerIcon"></i></button>
+                   <button id="timerReset" title="Reiniciar" aria-label="Reiniciar o cronômetro"><i class="fas fa-undo"></i></button>
+                </div>
+                <button id="btnShowShortcuts" class="help-button" title="Mostrar/Ocultar Atalhos de Teclado" aria-label="Mostrar ou ocultar atalhos de teclado">
                     <i class="fas fa-question"></i>
-                 </button>
-                 <div class="theme-switch-wrapper">
+                </button>
+                <div class="theme-switch-wrapper">
                     <label class="theme-switch" for="checkbox">
-                        <input type="checkbox" id="checkbox" />
+                        <input type="checkbox" id="checkbox" aria-label="Alternar tema claro/escuro" />
                         <div class="slider"></div>
                     </label>
                 </div>
             </div>
         </div>
-        
-        <div class="setup-section">
-            <div class="section-title">
-                <i class="fas fa-cog"></i>
-                Configuração do Dia
+
+        <div class="tabs">
+            <button class="tab-link active" data-tab="tab-proton">
+                <i class="fas fa-file-alt"></i> Controle de Protocolos
+            </button>
+            <button class="tab-link" data-tab="tab-contador">
+                <i class="fas fa-calculator"></i> Contador de Digitalização
+            </button>
+        </div>
+
+        <div id="tab-proton" class="tab-content active">
+            <div class="setup-section">
+                <div class="section-title"><i class="fas fa-cog"></i> Configuração do Dia</div>
+                <div class="form-grid">
+                    <div class="input-group">
+                        <div class="form-group">
+                            <label for="conferente"><i class="fas fa-user"></i> Seu Nome (Conferente)</label>
+                            <input type="text" id="conferente" placeholder="Digite seu nome">
+                        </div>
+                        <button id="btnFixarConferente" class="btn-secondary">Fixar Nome</button>
+                        <button id="btnTrocarConferente" class="btn-secondary" style="display: none;">Trocar</button>
+                    </div>
+                    <div class="input-group">
+                        <div class="form-group">
+                            <label for="convenio"><i class="fas fa-handshake"></i> Convênio do Dia</label>
+                            <select id="convenio">
+                                <option value="">-- Escolha um convênio --</option>
+                                <option value="Unimed">Unimed</option>
+                                <option value="Intercâmbio">Intercâmbio</option>
+                                <option value="Convênio Externo">Convênio Externo</option>
+                                <option value="Particular">Particular</option>
+                                <option value="Internação">Internação</option>
+                            </select>
+                        </div>
+                        <button id="btnFixarConvenio" class="btn-secondary">Fixar</button>
+                        <button id="btnTrocarConvenio" class="btn-secondary" style="display: none;">Trocar</button>
+                    </div>
+                </div>
+                <div class="form-group full-width">
+                    <label for="dataRecebimento"><i class="fas fa-calendar"></i> Data de Referência dos Protocolos</label>
+                    <input type="date" id="dataRecebimento" required>
+                </div>
             </div>
-            <div class="form-grid">
+            <div class="setup-section">
+                <div class="section-title"><i class="fas fa-plus-circle"></i> Adicionar Novos Protocolos</div>
                 <div class="input-group">
                     <div class="form-group">
-                        <label for="conferente"><i class="fas fa-user"></i> Seu Nome (Conferente)</label>
-                        <input type="text" id="conferente" placeholder="Digite seu nome">
+                        <label for="numProtocolo"><i class="fas fa-hashtag"></i> Nº do Protocolo</label>
+                        <input type="text" id="numProtocolo" placeholder="Digite para adicionar um por um">
                     </div>
-                    <button id="btnFixarConferente" class="btn-secondary">Fixar Nome</button>
-                    <button id="btnTrocarConferente" class="btn-secondary" style="display: none;">Trocar</button>
-                </div>
-                <div class="input-group">
-                    <div class="form-group">
-                        <label for="convenio"><i class="fas fa-handshake"></i> Convênio do Dia</label>
-                        <select id="convenio">
-                            <option value="">-- Escolha um convênio --</option>
-                            <option value="Unimed">Unimed</option>
-                            <option value="Intercâmbio">Intercâmbio</option>
-                            <option value="Convênio Externo">Convênio Externo</option>
-                            <option value="Particular">Particular</option>
-                            <option value="Internação">Internação</option>
-                        </select>
-                    </div>
-                    <button id="btnFixarConvenio" class="btn-secondary">Fixar</button>
-                    <button id="btnTrocarConvenio" class="btn-secondary" style="display: none;">Trocar</button>
+                    <button id="btnAdicionar" class="btn-primary"><i class="fas fa-plus"></i> Adicionar</button>
+                    <button id="btnAbrirModalLote" class="btn-warning"><i class="fas fa-layer-group"></i> Adicionar em Lote</button>
                 </div>
             </div>
-            <div class="form-group full-width">
-                <label for="dataRecebimento"><i class="fas fa-calendar"></i> Data de Referência dos Protocolos</label>
-                <input type="date" id="dataRecebimento" required>
-            </div>
-        </div>
-
-        <div class="setup-section">
-            <div class="section-title">
-                <i class="fas fa-plus-circle"></i>
-                Adicionar Novos Protocolos
-            </div>
-            <div class="input-group">
-                <div class="form-group">
-                    <label for="numProtocolo"><i class="fas fa-hashtag"></i> Nº do Protocolo</label>
-                    <input type="text" id="numProtocolo" placeholder="Digite para adicionar um por um">
+            <div class="search-filters">
+                <div class="section-title"><i class="fas fa-search"></i> Busca e Filtros</div>
+                <div class="search-bar">
+                    <input type="text" id="searchInput" placeholder="Buscar por protocolo, convênio ou status...">
                 </div>
-                <button id="btnAdicionar" class="btn-primary"><i class="fas fa-plus"></i> Adicionar</button>
-                <button id="btnAbrirModalLote" class="btn-warning"><i class="fas fa-layer-group"></i> Adicionar em Lote</button>
-            </div>
-        </div>
-
-        <div class="search-filters">
-            <div class="section-title">
-                <i class="fas fa-search"></i>
-                Busca e Filtros
-            </div>
-            <div class="search-bar">
-                <input type="text" id="searchInput" placeholder="Buscar por protocolo, convênio ou status...">
-            </div>
-            <div class="filters-grid">
-                <div class="form-group">
-                    <label for="filterStatus"><i class="fas fa-filter"></i> Filtrar por Status</label>
-                    <select id="filterStatus">
-                        <option value="">Todos os Status</option>
-                        <option value="Pendente">Pendente</option>
-                        <option value="Baixado">Baixado</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="filterConvenio"><i class="fas fa-filter"></i> Filtrar por Convênio</label>
-                    <select id="filterConvenio">
-                        <option value="">Todos os Convênios</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="filterDate"><i class="fas fa-filter"></i> Filtrar por Data</label>
-                    <input type="date" id="filterDate">
-                </div>
-                <button id="btnClearFilters" class="btn-danger" style="align-self: flex-end;"><i class="fas fa-times"></i> Limpar Filtros</button>
-            </div>
-        </div>
-
-        <div class="setup-section">
-            <div class="section-title">
-                <i class="fas fa-chart-pie"></i>
-                Dashboard e Estatísticas
-            </div>
-            <div class="dashboard">
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-list"></i></div>
-                    <h4>Total na Fila</h4>
-                    <p id="stat-total">0</p>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
-                    <h4>Processados</h4>
-                    <p id="stat-processados">0</p>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-clock"></i></div>
-                    <h4>Pendentes</h4>
-                    <p id="stat-pendentes">0</p>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-percentage"></i></div>
-                    <h4>Taxa de Conclusão</h4>
-                    <p id="stat-taxa">0%</p>
-                </div>
-                <div class="chart-card">
-                    <canvas id="tipoDocumentoChart"></canvas>
-                </div>
-                <div class="progress-bar-container">
-                    <div class="progress-bar" id="progressBar">0%</div>
+                <div class="filters-grid">
+                    <div class="form-group"><label for="filterStatus"><i class="fas fa-filter"></i> Filtrar por Status</label><select id="filterStatus"><option value="">Todos os Status</option><option value="Pendente">Pendente</option><option value="Baixado">Baixado</option></select></div>
+                    <div class="form-group"><label for="filterConvenio"><i class="fas fa-filter"></i> Filtrar por Convênio</label><select id="filterConvenio"><option value="">Todos os Convênios</option></select></div>
+                    <div class="form-group"><label for="filterDate"><i class="fas fa-filter"></i> Filtrar por Data</label><input type="date" id="filterDate"></div>
+                    <button id="btnClearFilters" class="btn-danger" style="align-self: flex-end;"><i class="fas fa-times"></i> Limpar Filtros</button>
                 </div>
             </div>
-        </div>
-
-        <div class="actions">
-            <button id="gerarExcel" class="btn-success"><i class="fas fa-file-excel"></i> Gerar Planilha Excel</button>
-            <button id="btnBackup" class="btn-info"><i class="fas fa-download"></i> Backup Dados</button>
-            <button id="btnRestore" class="btn-warning"><i class="fas fa-upload"></i> Restaurar Dados</button>
-            <button id="btnLimpar" class="btn-danger"><i class="fas fa-trash"></i> Limpar Todos os Dados</button>
-        </div>
-
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
+            <div class="setup-section">
+                <div class="section-title"><i class="fas fa-chart-pie"></i> Dashboard e Estatísticas</div>
+                <div class="dashboard">
+                    <div class="stat-card"><div class="stat-icon"><i class="fas fa-list"></i></div><h4>Total na Fila</h4><p id="stat-total">0</p></div>
+                    <div class="stat-card"><div class="stat-icon"><i class="fas fa-check-circle"></i></div><h4>Processados</h4><p id="stat-processados">0</p></div>
+                    <div class="stat-card"><div class="stat-icon"><i class="fas fa-clock"></i></div><h4>Pendentes</h4><p id="stat-pendentes">0</p></div>
+                    <div class="stat-card"><div class="stat-icon"><i class="fas fa-percentage"></i></div><h4>Taxa de Conclusão</h4><p id="stat-taxa">0%</p></div>
+                    <div class="chart-card"><canvas id="tipoDocumentoChart"></canvas></div>
+                    <div class="progress-bar-container"><div class="progress-bar" id="progressBar">0%</div></div>
+                </div>
+            </div>
+            <div class="actions">
+                <button id="gerarExcel" class="btn-success"><i class="fas fa-file-excel"></i> Gerar Planilha Excel</button>
+                <button id="btnBackup" class="btn-info"><i class="fas fa-download"></i> Backup Dados</button>
+                <button id="btnRestore" class="btn-warning"><i class="fas fa-upload"></i> Restaurar Dados</button>
+                <button id="btnLimpar" class="btn-danger"><i class="fas fa-trash"></i> Limpar Todos os Dados</button>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead><tr>
                         <th><i class="fas fa-hashtag"></i> Protocolo</th>
                         <th><i class="fas fa-handshake"></i> Convênio</th>
                         <th><i class="fas fa-info-circle"></i> Status</th>
                         <th><i class="fas fa-calendar"></i> Data</th>
                         <th><i class="fas fa-cogs"></i> Ações</th>
-                    </tr>
-                </thead>
-                <tbody id="tabelaCorpo"></tbody>
-            </table>
+                    </tr></thead>
+                    <tbody id="tabelaCorpo"></tbody>
+                </table>
+            </div>
+            <p id="mensagemVazia" style="text-align: center; padding: 20px; color: #777;">Nenhum documento processado ainda</p>
+            <button id="btnShowHistory" class="btn-info" style="margin-top: 20px;"><i class="fas fa-history"></i> Mostrar Histórico</button>
+            <div id="activityHistory" style="display: none; margin-top: 20px; background: var(--cor-setup); padding: 20px; border-radius: 12px; border: 1px solid var(--cor-borda);">
+                <h4><i class="fas fa-history"></i> Histórico de Atividades</h4><div id="activityList"></div>
+            </div>
         </div>
-        <p id="mensagemVazia" style="text-align: center; padding: 20px; color: #777;">Nenhum documento processado ainda</p>
 
-        <button id="btnShowHistory" class="btn-info" style="margin-top: 20px;"><i class="fas fa-history"></i> Mostrar Histórico de Atividades</button>
-        <div id="activityHistory" style="display: none; margin-top: 20px; background: var(--cor-setup); padding: 20px; border-radius: 12px; border: 1px solid var(--cor-borda);">
-            <h4><i class="fas fa-history"></i> Histórico de Atividades</h4>
-            <div id="activityList"></div>
+        <div id="tab-contador" class="tab-content">
+             <div class="setup-section">
+                <div class="section-title"><i class="fas fa-calculator"></i> Contador Manual</div>
+                 <div class="main-content">
+                    <div class="counter-card" id="ambulatorio-card">
+                        <h2>Ambulatório</h2>
+                        <p class="count" id="ambulatorio-count">0</p>
+                        <button id="add-ambulatorio-btn" class="btn-primary">+1 Ambulatório</button>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="contadorChart"></canvas>
+                    </div>
+                    <div class="counter-card" id="internacao-card">
+                        <h2>Internação</h2>
+                        <p class="count" id="internacao-count">0</p>
+                        <button id="add-internacao-btn" class="btn-success">+1 Internação</button>
+                    </div>
+                    <div class="counter-card" id="total-card">
+                        <h2>TOTAL</h2>
+                        <p class="count" id="total-count">0</p>
+                    </div>
+                </div>
+                <div class="actions-area">
+                    <button id="pdf-btn" class="btn-info"><i class="fas fa-file-pdf"></i> Gerar Relatório PDF</button>
+                    <button id="reset-btn" class="btn-danger"><i class="fas fa-undo"></i> Zerar Contagem</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -211,7 +196,6 @@
             </div>
         </div>
     </div>
-
     <div id="modalConferencia" class="modal">
         <div class="modal-content">
             <span id="fecharModalConferencia" class="close">&times;</span>
@@ -219,13 +203,17 @@
             <div id="conferenciaForm"></div>
         </div>
     </div>
-
     <input type="file" id="fileRestore" accept=".json" style="display: none;">
 
-    <script src="script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+    <script src="script.js" defer></script>
 
     <footer style="text-align: center; margin-top: 40px; padding: 20px; color: #94a3b8; font-size: 14px; border-top: 1px solid var(--cor-borda);">
-        Proton v1.1 | Desenvolvido por <strong>Ryan Cristian</strong> - Gestão da Informação
+        <p>
+            Proton v1.2 | Desenvolvido por <strong>Ryan Cristian</strong> - Desenvolvedor Junior
+        </p>
     </footer>
 </body>
 </html>
