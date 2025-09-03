@@ -449,7 +449,14 @@
             const isDark = elements.themeSwitch.checked;
             document.documentElement.classList.toggle('dark-mode', isDark);
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            setTimeout(atualizarDashboard, 100);
+            // Recriar os gráficos para que as cores do texto se ajustem
+            setTimeout(() => {
+                aplicarFiltros(); // Atualiza o gráfico do PROTON
+                if (typeof myChart !== 'undefined') { // Verifica se o gráfico do contador existe
+                    contadorApp().criarGrafico(); // Recria o gráfico do contador
+                    contadorApp().atualizarTudo(); // Atualiza os dados (cores da borda, etc.)
+                }
+            }, 100); // Pequeno delay para garantir que as variáveis CSS foram atualizadas
         });
         
         if (localStorage.getItem('theme') === 'dark') {
@@ -509,6 +516,10 @@
 
         function criarGrafico() {
             if (myChart) myChart.destroy();
+            
+            // Pega a cor do texto do tema atual
+            const textColor = getCssVariable('--cor-texto');
+
             myChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
@@ -519,7 +530,20 @@
                         borderColor: [getCssVariable('--cor-container'), getCssVariable('--cor-container')], borderWidth: 4
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: getCssVariable('--cor-texto') } } } }
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { 
+                        legend: { 
+                            position: 'bottom', 
+                            labels: { 
+                                color: textColor, // Usa a cor do texto do tema aqui
+                                padding: 20, 
+                                usePointStyle: true 
+                            } 
+                        } 
+                    } 
+                }
             });
         }
         
@@ -542,8 +566,13 @@
             ambulatorioCountEl.textContent = ambulatorioCount;
             internacaoCountEl.textContent = internacaoCount;
             totalCountEl.textContent = total;
-            myChart.data.datasets[0].data = [ambulatorioCount, internacaoCount];
-            myChart.update();
+            // Atualiza o gráfico existente em vez de recriar, para melhor performance
+            if (myChart) {
+                myChart.data.datasets[0].data = [ambulatorioCount, internacaoCount];
+                myChart.update();
+            } else {
+                criarGrafico(); // Se por algum motivo não existir, cria.
+            }
             saveCounts();
         }
 
@@ -584,21 +613,54 @@
             if (logoElement.complete && logoElement.naturalHeight !== 0) criarPDF(); else logoElement.onload = criarPDF;
         });
         
-        document.getElementById('checkbox').addEventListener('change', () => {
-            setTimeout(() => { criarGrafico(); atualizarTudo(); }, 100);
-        });
-
-        loadCounts();
-        criarGrafico();
-        atualizarTudo();
+        // Expondo criarGrafico e atualizarTudo para serem chamados externamente
+        return {
+            criarGrafico: criarGrafico,
+            atualizarTudo: atualizarTudo
+        };
     };
 
     // --- INICIALIZAÇÃO GERAL ---
     document.addEventListener('DOMContentLoaded', () => {
         setupTabs();
         protonApp();
-        contadorApp();
         
+        // Inicializa o contadorApp e armazena suas funções expostas
+        const contadorFunctions = contadorApp();
+
+        // Lógica de mudança de tema
+        const themeSwitch = document.getElementById('checkbox');
+        themeSwitch.addEventListener('change', () => {
+            const isDark = themeSwitch.checked;
+            document.documentElement.classList.toggle('dark-mode', isDark);
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            
+            // Pequeno delay para garantir que as variáveis CSS foram atualizadas
+            setTimeout(() => {
+                // Atualiza o gráfico do PROTON (já é feito em aplicarFiltros)
+                if (document.getElementById('tab-proton').classList.contains('active')) {
+                   protonApp().aplicarFiltros(); // Chamando a função exposta
+                }
+                
+                // Recria o gráfico do contador para que as cores do texto se ajustem
+                if (contadorFunctions && typeof contadorFunctions.criarGrafico === 'function') {
+                    contadorFunctions.criarGrafico(); 
+                    contadorFunctions.atualizarTudo(); 
+                }
+            }, 100); 
+        });
+
+        // Configura tema inicial
+        if (localStorage.getItem('theme') === 'dark') {
+            themeSwitch.checked = true;
+            document.documentElement.classList.add('dark-mode');
+        }
+
+        // Chame criarGrafico() e atualizarTudo() do contadorApp após carregar as contagens
+        contadorFunctions.loadCounts();
+        contadorFunctions.criarGrafico();
+        contadorFunctions.atualizarTudo();
+
         // Atalhos Globais
         document.addEventListener('keydown', (event) => {
             const isModalOpen = document.querySelector('.modal[style*="display: block"]');
