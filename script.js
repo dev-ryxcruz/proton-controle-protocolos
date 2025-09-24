@@ -56,6 +56,44 @@
         }
     };
 
+    // === ADICIONAR: Gerenciador de Símbolos (após os utilitários existentes) ===
+    const SymbolManager = {
+        // Gera os símbolos indicadores baseado nas quantidades e observações
+        generateIndicators: (item) => {
+            const { quantidades = {}, observacoes = '' } = item;
+            const indicatorMap = {
+                Ambulatorio: { class: 'amb', letter: 'A', label: 'Ambulatório' },
+                CDI: { class: 'cdi', letter: 'C', label: 'CDI' },
+                UE: { class: 'ue', letter: 'U', label: 'UE' },
+                Internacao: { class: 'int', letter: 'I', label: 'Internação' },
+            };
+
+            let indicatorsHTML = Object.entries(indicatorMap)
+                .filter(([key]) => quantidades[key] > 0)
+                .map(([key, { class: c, letter, label }]) => 
+                    `<div class="indicator-symbol indicator-${c}" data-tooltip="${label}: ${quantidades[key]} docs" title="${label}: ${quantidades[key]} documentos">${letter}</div>`
+                ).join('');
+
+            if (observacoes.trim()) {
+                indicatorsHTML += `<div class="indicator-symbol indicator-obs" data-tooltip="Possui observações" title="Protocolo possui observações">📝</div>`;
+            }
+            return indicatorsHTML;
+        },
+    
+        // Cria a estrutura da célula do protocolo
+        createProtocolCell: (item) => {
+            const indicators = SymbolManager.generateIndicators(item);
+            return `
+                <div class="protocol-cell">
+                    <span class="protocol-number">${SecurityUtils.escapeHTML(item.protocolo)}</span>
+                    <div class="protocol-indicators">
+                        ${indicators}
+                    </div>
+                </div>
+            `;
+        },
+    };
+
     // Gerenciador de loading
     const LoadingManager = {
         show: (message = 'Carregando...') => {
@@ -76,6 +114,11 @@
                 }, 300);
             }
         }
+    };
+
+    // Utilitário para obter variáveis CSS
+    const getCssVariable = (variable) => {
+        return getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
     };
 
     // Inicialização da aplicação
@@ -229,14 +272,24 @@
             keyboardShortcuts: document.getElementById('keyboardShortcuts')
         };
         
+        // MELHORIA: Centralizar chaves do localStorage
+        const STORAGE_KEYS = {
+            database: 'documentosDB_pro_v1',
+            activities: 'atividades_pro_v1',
+            timerSeconds: 'timer_seconds',
+            timerRunning: 'timer_was_running',
+            fixedConferente: 'conferenteFixo_pro_v1',
+            fixedConvenio: 'convenioFixo_pro_v1'
+        };
+
         // Estado da aplicação
         let state = {
-            baseDeDados: JSON.parse(localStorage.getItem('documentosDB_pro_v1')) || [],
+            baseDeDados: JSON.parse(localStorage.getItem(STORAGE_KEYS.database)) || [],
             dadosFiltrados: [],
-            atividades: JSON.parse(localStorage.getItem('atividades_pro_v1')) || [],
+            atividades: JSON.parse(localStorage.getItem(STORAGE_KEYS.activities)) || [],
             tipoDocumentoChart: null,
             timerInterval: null,
-            timerSeconds: parseInt(localStorage.getItem('timer_seconds')) || 0,
+            timerSeconds: parseInt(localStorage.getItem(STORAGE_KEYS.timerSeconds)) || 0,
             isTimerRunning: false,
             sortColumn: null,
             sortDirection: 'asc'
@@ -254,11 +307,27 @@
 
         const salvarDados = () => {
             try {
-                localStorage.setItem('documentosDB_pro_v1', JSON.stringify(state.baseDeDados));
-                localStorage.setItem('atividades_pro_v1', JSON.stringify(state.atividades));
+                localStorage.setItem(STORAGE_KEYS.database, JSON.stringify(state.baseDeDados));
+                localStorage.setItem(STORAGE_KEYS.activities, JSON.stringify(state.atividades));
             } catch (error) {
                 console.error('Erro ao salvar dados:', error);
                 showToast('error', 'Erro', 'Falha ao salvar dados localmente.');
+            }
+        };
+
+        // NOVO: Gerenciador de Modais para Acessibilidade
+        let lastFocusedElement = null;
+
+        const closeModal = (modalElement) => {
+            if (!modalElement) return;
+
+            modalElement.style.display = 'none';
+            modalElement.setAttribute('aria-hidden', 'true');
+
+            // Retorna o foco para o elemento que abriu o modal
+            if (lastFocusedElement) {
+                lastFocusedElement.focus();
+                lastFocusedElement = null;
             }
         };
 
@@ -398,7 +467,7 @@
             state.timerInterval = setInterval(() => {
                 state.timerSeconds++;
                 updateTimerDisplay();
-                localStorage.setItem('timer_seconds', state.timerSeconds);
+                localStorage.setItem(STORAGE_KEYS.timerSeconds, state.timerSeconds);
             }, 1000);
         };
 
@@ -418,7 +487,7 @@
             
             if (confirm('Tem certeza que deseja reiniciar o cronômetro?')) {
                 state.timerSeconds = 0;
-                localStorage.removeItem('timer_seconds');
+                localStorage.removeItem(STORAGE_KEYS.timerSeconds);
                 updateTimerDisplay();
                 showToast('info', 'Cronômetro Reiniciado', 'O tempo foi zerado.');
             }
@@ -504,6 +573,13 @@
             atualizarGrafico();
         };
 
+        const getChartColors = () => ({
+            Ambulatorio: getCssVariable('--cor-ambulatório'),
+            CDI: getCssVariable('--cor-tipo-cdi'),
+            UE: getCssVariable('--cor-tipo-ue'),
+            Internacao: getCssVariable('--cor-internação'),
+        });
+
         const atualizarGrafico = () => {
             const contagemTipos = { Ambulatorio: 0, CDI: 0, UE: 0, Internacao: 0 };
             
@@ -521,6 +597,7 @@
             
             const labels = Object.keys(contagemTipos).filter(k => contagemTipos[k] > 0);
             const data = Object.values(contagemTipos).filter(v => v > 0);
+            const colors = labels.map(label => getChartColors()[label]);
             
             // Destruir gráfico anterior
             if (state.tipoDocumentoChart) {
@@ -540,7 +617,7 @@
                         }),
                         datasets: [{
                             data: data,
-                            backgroundColor: ['#3b82f6', '#ef4444', '#f59e0b', '#10b981'],
+                            backgroundColor: colors,
                             borderColor: getComputedStyle(document.documentElement).getPropertyValue('--cor-container'),
                             borderWidth: 2
                         }]
@@ -565,15 +642,25 @@
 
         // Renderização da tabela com ordenação
         const renderizarTabela = () => {
+            if (!elements.tabelaCorpo) return;
+            
             elements.tabelaCorpo.innerHTML = '';
-            elements.mensagemVazia.style.display = state.dadosFiltrados.length === 0 ? 'block' : 'none';
+            
+            if (elements.mensagemVazia) {
+                elements.mensagemVazia.style.display = state.dadosFiltrados.length === 0 ? 'block' : 'none';
+            }
             
             state.dadosFiltrados.forEach((item, index) => {
                 const tr = document.createElement('tr');
+                tr.dataset.protocolo = item.protocolo; // Adiciona ID para fácil referência
+                const isSelected = state.selectedItems.includes(item.protocolo);
+                if (isSelected) {
+                    tr.classList.add('selected');
+                }
                 if (item.status === 'Baixado') {
                     tr.classList.add('status-baixado');
                 }
-                
+
                 const convenioColor = {
                     'Unimed': '#3b82f6',
                     'Intercâmbio': '#ef4444',
@@ -581,13 +668,19 @@
                     'Particular': '#10b981',
                     'Internação': '#8b5cf6'
                 };
-                
-                const protocoloSafe = SecurityUtils.escapeHTML(item.protocolo);
+
                 const convenioSafe = SecurityUtils.escapeHTML(item.convenio);
                 const statusSafe = SecurityUtils.escapeHTML(item.status);
-                
+
+                // === NOVO: Usar SymbolManager para criar a célula do protocolo ===
+                const protocolCell = SymbolManager.createProtocolCell(item);
+
+                // MELHORIA: Adicionar data-index para delegação de eventos
                 tr.innerHTML = `
-                    <td>${protocoloSafe}</td>
+                    <td class="checkbox-cell">
+                        <input type="checkbox" class="row-checkbox" data-protocolo="${item.protocolo}" ${isSelected ? 'checked' : ''} aria-label="Selecionar protocolo ${item.protocolo}">
+                    </td>
+                    <td data-label="Protocolo">${protocolCell}</td>
                     <td>
                         <span style="background: ${convenioColor[item.convenio] || '#64748b'}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">
                             ${convenioSafe}
@@ -600,35 +693,35 @@
                     <td>${formatarDataBR(item.dataRecebimento)}</td>
                     <td class="action-buttons"></td>
                 `;
-                
+
                 const acaoCell = tr.querySelector('.action-buttons');
                 const itemIndex = state.baseDeDados.indexOf(item);
-                
+
+                // MELHORIA: Usar data-action e data-index para delegação de eventos
+                const createButton = (action, icon, btnClass, title) => 
+                    `<button type="button" class="${btnClass}" data-action="${action}" data-index="${itemIndex}" title="${title}" aria-label="${title} protocolo ${item.protocolo}">
+                        <i class="fas ${icon}" aria-hidden="true"></i>
+                    </button>`;
+
                 if (item.status === 'Baixado') {
                     acaoCell.innerHTML = `
-                        <button class="btn-warning" onclick="window.protonActions.editarProtocolo(${itemIndex})" title="Editar protocolo" aria-label="Editar protocolo ${protocoloSafe}">
-                            <i class="fas fa-edit" aria-hidden="true"></i>
-                        </button>
-                        <button class="btn-danger" onclick="window.protonActions.removerProtocolo(${itemIndex})" title="Remover protocolo" aria-label="Remover protocolo ${protocoloSafe}">
-                            <i class="fas fa-trash" aria-hidden="true"></i>
-                        </button>
+                        ${createButton('edit', 'fa-edit', 'btn-warning', 'Editar')}
+                        ${createButton('delete', 'fa-trash', 'btn-danger', 'Remover')}
                     `;
                 } else {
                     acaoCell.innerHTML = `
-                        <button class="btn-success" onclick="window.protonActions.conferirProtocolo(${itemIndex})" title="Conferir protocolo" aria-label="Conferir protocolo ${protocoloSafe}">
-                            <i class="fas fa-check" aria-hidden="true"></i>
-                        </button>
-                        <button class="btn-warning" onclick="window.protonActions.editarProtocolo(${itemIndex})" title="Editar protocolo" aria-label="Editar protocolo ${protocoloSafe}">
-                            <i class="fas fa-edit" aria-hidden="true"></i>
-                        </button>
-                        <button class="btn-danger" onclick="window.protonActions.removerProtocolo(${itemIndex})" title="Remover protocolo" aria-label="Remover protocolo ${protocoloSafe}">
-                            <i class="fas fa-trash" aria-hidden="true"></i>
-                        </button>
+                        ${createButton('conference', 'fa-check', 'btn-success', 'Conferir')}
+                        ${createButton('edit', 'fa-edit', 'btn-warning', 'Editar')}
+                        ${createButton('delete', 'fa-trash', 'btn-danger', 'Remover')}
                     `;
                 }
-                
+
                 elements.tabelaCorpo.appendChild(tr);
             });
+
+            // Atualiza o estado do checkbox "selecionar todos"
+            const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+            selectAllCheckbox.checked = state.dadosFiltrados.length > 0 && state.dadosFiltrados.every(item => state.selectedItems.includes(item.protocolo));
         };
 
         // Sistema de ordenação
@@ -724,6 +817,7 @@
             
             renderizarTabela();
             atualizarDashboard();
+            updateBulkActionsBar();
         }, 300);
 
         // Ações globais do PROTON
@@ -757,9 +851,9 @@
                     </div>
                     <div class="actions">
                         <button class="btn-success" onclick="window.protonActions.salvarConferencia(${index})">
-                            <i class="fas fa-save" aria-hidden="true"></i> Salvar
+                            <i class="fas fa-save" aria-hidden="true"></i> Salvar Conferência
                         </button>
-                        <button class="btn-secondary" onclick="document.getElementById('modalConferencia').style.display='none'">
+                        <button type="button" class="btn-secondary" onclick="window.protonActions.closeActiveModal()">
                             Cancelar
                         </button>
                     </div>
@@ -776,10 +870,10 @@
 
             salvarConferencia: (index) => {
                 const quantidades = {
-                    Ambulatorio: parseInt(document.getElementById('qtd-ambulatorio').value) || 0,
-                    CDI: parseInt(document.getElementById('qtd-cdi').value) || 0,
-                    UE: parseInt(document.getElementById('qtd-ue').value) || 0,
-                    Internacao: parseInt(document.getElementById('qtd-internacao').value) || 0
+                    Ambulatorio: parseInt(document.getElementById('qtd-ambulatorio')?.value) || 0,
+                    CDI: parseInt(document.getElementById('qtd-cdi')?.value) || 0,
+                    UE: parseInt(document.getElementById('qtd-ue')?.value) || 0,
+                    Internacao: parseInt(document.getElementById('qtd-internacao')?.value) || 0
                 };
                 
                 const total = Object.values(quantidades).reduce((a, b) => a + b, 0);
@@ -790,44 +884,271 @@
                 }
                 
                 const item = state.baseDeDados[index];
+                if (!item) return;
+                
+                const observacoes = document.getElementById('observacoes')?.value || '';
+                
                 item.status = 'Baixado';
                 item.quantidades = quantidades;
-                item.observacoes = SecurityUtils.escapeHTML(document.getElementById('observacoes').value);
-                item.conferente = elements.conferente.value;
+                item.observacoes = SecurityUtils.escapeHTML(observacoes);
+                item.conferente = elements.conferente ? elements.conferente.value : '';
                 item.dataConferencia = new Date().toISOString();
                 
                 salvarDados();
                 aplicarFiltros();
                 
-                elements.modalConferencia.style.display = 'none';
-                elements.modalConferencia.setAttribute('aria-hidden', 'true');
+                if (elements.modalConferencia) {
+                    elements.modalConferencia.style.display = 'none';
+                    elements.modalConferencia.setAttribute('aria-hidden', 'true');
+                }
                 
                 showToast('success', 'Protocolo Conferido', `Protocolo ${item.protocolo} conferido com sucesso.`);
                 addActivity('conference', `Protocolo ${item.protocolo} conferido`, `Total: ${total} documentos`);
             },
 
+            // Variáveis para controlar a conferência em massa sequencial
+            _bulkConferenceQueue: [],
+            _bulkConferenceIndex: 0,
+            closeActiveModal: () => {
+                closeModal(elements.modalConferencia);
+            },
+
+            // NOVO: Ações em massa
+            conferirSelecionados: () => {
+                if (state.selectedItems.length === 0) {
+                    showToast('warning', 'Nenhum Item', 'Selecione pelo menos um protocolo para conferir.');
+                    return;
+                }
+
+                // Inicia a fila de conferência sequencial
+                window.protonActions._bulkConferenceQueue = state.selectedItems.filter(protocoloId => {
+                    const item = state.baseDeDados.find(i => i.protocolo === protocoloId);
+                    return item && item.status === 'Pendente';
+                });
+                window.protonActions._bulkConferenceIndex = 0;
+
+                if (window.protonActions._bulkConferenceQueue.length === 0) {
+                    showToast('info', 'Nenhum Pendente', 'Todos os itens selecionados já foram conferidos.');
+                    clearSelection();
+                    return;
+                }
+
+                window.protonActions.processNextBulkItem();
+            },
+
+            processNextBulkItem: () => {
+                if (window.protonActions._bulkConferenceIndex >= window.protonActions._bulkConferenceQueue.length) {
+                    // Fim da fila
+                    closeModal(elements.modalConferencia);
+                    salvarDados();
+                    clearSelection();
+                    aplicarFiltros();
+                    showToast('success', 'Conferência em Massa Concluída', `${this._bulkConferenceQueue.length} protocolos foram conferidos.`);
+                    addActivity('conference', `Conferência em massa de ${this._bulkConferenceQueue.length} protocolos.`);
+                    return;
+                }
+
+                const protocoloId = window.protonActions._bulkConferenceQueue[window.protonActions._bulkConferenceIndex];
+                const item = state.baseDeDados.find(i => i.protocolo === protocoloId);
+                const itemIndex = state.baseDeDados.indexOf(item);
+
+                const modal = elements.modalConferencia;
+                const totalItems = window.protonActions._bulkConferenceQueue.length;
+                const currentItemNum = window.protonActions._bulkConferenceIndex + 1;
+
+                modal.querySelector('.modal-header h2').innerHTML = `<i class="fas fa-check-double"></i> Conferindo ${currentItemNum} de ${totalItems}: Protocolo ${item.protocolo}`;
+
+                // Reutiliza o formulário de conferência individual
+                window.protonActions.conferirProtocolo(itemIndex);
+
+                // Modifica os botões para o fluxo sequencial
+                setTimeout(() => {
+                    const form = elements.conferenciaForm;
+                    const actionsDiv = form.querySelector('.actions');
+                    const isLastItem = window.protonActions._bulkConferenceIndex === totalItems - 1;
+
+                    actionsDiv.innerHTML = `
+                        <button class="btn-success" onclick="window.protonActions.salvarConferenciaSequencial()"><i class="fas fa-save"></i> ${isLastItem ? 'Salvar e Finalizar' : 'Salvar e Próximo'}</button>
+                        <button type="button" class="btn-warning" onclick="window.protonActions.pularItemSequencial()"><i class="fas fa-forward"></i> Pular</button>
+                        <button type="button" class="btn-danger" onclick="window.protonActions.cancelarSequencia()">Cancelar</button>
+                    `;
+                }, 150); // Delay para garantir que o DOM foi atualizado por conferirProtocolo
+            },
+
+            salvarConferenciaSequencial: () => {
+                const protocoloId = window.protonActions._bulkConferenceQueue[window.protonActions._bulkConferenceIndex];
+                const itemIndex = state.baseDeDados.findIndex(i => i.protocolo === protocoloId);
+
+                if (itemIndex === -1) {
+                    showToast('error', 'Erro', 'Não foi possível encontrar o protocolo para salvar.');
+                    return;
+                }
+
+                // Salva o item atual
+                window.protonActions.salvarConferencia(itemIndex);
+
+                // Move para o próximo
+                window.protonActions._bulkConferenceIndex++;
+                window.protonActions.processNextBulkItem();
+            },
+
+            pularItemSequencial: () => {
+                window.protonActions._bulkConferenceIndex++;
+                window.protonActions.processNextBulkItem();
+            },
+
+            cancelarSequencia: () => {
+                window.protonActions._bulkConferenceQueue = [];
+                window.protonActions._bulkConferenceIndex = 0;
+                closeModal(elements.modalConferencia);
+                showToast('info', 'Cancelado', 'A conferência em massa foi cancelada.');
+            },
+
+            // NOVO: Função para salvar a edição da conferência
+            salvarEdicaoConferencia: (index) => {
+                const item = state.baseDeDados[index];
+                if (!item) return;
+
+                const quantidades = {
+                    Ambulatorio: parseInt(document.getElementById('qtd-ambulatorio')?.value) || 0,
+                    CDI: parseInt(document.getElementById('qtd-cdi')?.value) || 0,
+                    UE: parseInt(document.getElementById('qtd-ue')?.value) || 0,
+                    Internacao: parseInt(document.getElementById('qtd-internacao')?.value) || 0
+                };
+
+                const total = Object.values(quantidades).reduce((a, b) => a + b, 0);
+
+                if (total === 0) {
+                    showToast('warning', 'Quantidade Inválida', 'Pelo menos um tipo deve ter quantidade maior que zero.');
+                    return;
+                }
+
+                const observacoes = document.getElementById('observacoes')?.value || '';
+
+                // NOVO: Validar e salvar a edição do número do protocolo
+                const novoProtocoloInput = document.getElementById('edit-protocolo-conferencia');
+                if (novoProtocoloInput) {
+                    const novoProtocolo = novoProtocoloInput.value.trim();
+                    if (novoProtocolo && novoProtocolo !== item.protocolo) {
+                        const validacao = validarProtocolo(novoProtocolo);
+                        if (!validacao.valido && validacao.erro !== 'Protocolo já existe na fila.') {
+                            showToast('error', 'Erro de Validação', validacao.erro);
+                            return;
+                        }
+                        addActivity('edit', `Protocolo editado: ${item.protocolo} → ${novoProtocolo}`);
+                        item.protocolo = novoProtocolo;
+                    }
+                }
+
+                // Atualiza os dados do item
+                item.quantidades = quantidades;
+                item.observacoes = SecurityUtils.escapeHTML(observacoes);
+                // Opcional: atualizar conferente e data da edição
+                item.conferente = elements.conferente ? elements.conferente.value : item.conferente;
+                item.dataConferencia = new Date().toISOString();
+
+                salvarDados();
+                aplicarFiltros();
+
+                closeModal(elements.modalConferencia);
+
+                showToast('success', 'Conferência Editada', `Dados do protocolo ${item.protocolo} foram atualizados.`);
+                addActivity('edit', `Conferência do protocolo ${item.protocolo} editada`, `Novo total: ${total} documentos`);
+            },
+
             editarProtocolo: (index) => {
                 const item = state.baseDeDados[index];
                 if (!item) return;
-                
-                const novoProtocolo = prompt('Editar número do protocolo:', item.protocolo);
-                
-                if (novoProtocolo && novoProtocolo !== item.protocolo) {
-                    const validacao = validarProtocolo(novoProtocolo);
+
+                // MODIFICADO: Se o item já foi baixado, edita a conferência. Senão, edita o número do protocolo.
+                if (item.status === 'Baixado') {
+                    const modal = elements.modalConferencia;
+                    modal.querySelector('.modal-header h2').innerHTML = `<i class="fas fa-edit" aria-hidden="true"></i> Editar Conferência do Protocolo ${item.protocolo}`;
                     
-                    if (!validacao.valido) {
-                        showToast('error', 'Erro de Validação', validacao.erro);
-                        return;
+                    // MODIFICADO: Gera o formulário completo, incluindo o campo de protocolo
+                    elements.conferenciaForm.innerHTML = `
+                        <div class="form-group" style="margin-bottom: 20px;">
+                            <label for="edit-protocolo-conferencia">Número do Protocolo</label>
+                            <input type="text" id="edit-protocolo-conferencia" value="${SecurityUtils.escapeHTML(item.protocolo)}" required>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                            <div class="form-group">
+                                <label for="qtd-ambulatorio">Ambulatório</label>
+                                <input type="number" id="qtd-ambulatorio" min="0" value="${item.quantidades?.Ambulatorio || 0}" aria-label="Quantidade ambulatório">
+                            </div>
+                            <div class="form-group">
+                                <label for="qtd-cdi">CDI</label>
+                                <input type="number" id="qtd-cdi" min="0" value="${item.quantidades?.CDI || 0}" aria-label="Quantidade CDI">
+                            </div>
+                            <div class="form-group">
+                                <label for="qtd-ue">UE</label>
+                                <input type="number" id="qtd-ue" min="0" value="${item.quantidades?.UE || 0}" aria-label="Quantidade UE">
+                            </div>
+                            <div class="form-group">
+                                <label for="qtd-internacao">Internação</label>
+                                <input type="number" id="qtd-internacao" min="0" value="${item.quantidades?.Internacao || 0}" aria-label="Quantidade internação">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="observacoes">Observações</label>
+                            <textarea id="observacoes" rows="3" placeholder="Observações..." aria-label="Observações">${item.observacoes || ''}</textarea>
+                        </div>
+                        <div class="actions">
+                            <button class="btn-success" onclick="window.protonActions.salvarEdicaoConferencia(${index})"><i class="fas fa-save" aria-hidden="true"></i> Salvar Alterações</button>
+                            <button type="button" class="btn-secondary" onclick="window.protonActions.closeActiveModal()">Cancelar</button>
+                        </div>
+                    `;
+                    modal.style.display = 'block';
+                    modal.setAttribute('aria-hidden', 'false');
+                    return; // Finaliza a execução aqui
+                }
+
+                // Lógica original para editar o número do protocolo (para itens Pendentes)
+                const modal = elements.modalConferencia;
+                modal.querySelector('.modal-header h2').innerHTML = `<i class="fas fa-edit" aria-hidden="true"></i> Editar Protocolo`;
+                
+                const form = modal.querySelector('#conferenciaForm');
+                form.innerHTML = `
+                    <div class="form-group">
+                        <label for="edit-protocolo">Número do Protocolo</label>
+                        <input type="text" id="edit-protocolo" value="${SecurityUtils.escapeHTML(item.protocolo)}" required>
+                    </div>
+                    <div class="actions">
+                        <button type="button" id="btnSalvarEdicao" class="btn-success">
+                            <i class="fas fa-save" aria-hidden="true"></i> Salvar Alterações
+                        </button>
+                        <button type="button" class="btn-secondary" onclick="window.protonActions.closeActiveModal()">
+                            Cancelar
+                        </button>
+                    </div>
+                `;
+
+                modal.style.display = 'block';
+                modal.setAttribute('aria-hidden', 'false');
+
+                const input = document.getElementById('edit-protocolo');
+                input.focus();
+                input.select();
+
+                document.getElementById('btnSalvarEdicao').onclick = () => {
+                    const novoProtocolo = input.value.trim();
+                    if (novoProtocolo && novoProtocolo !== item.protocolo) {
+                        const validacao = validarProtocolo(novoProtocolo);
+                        if (!validacao.valido && validacao.erro !== 'Protocolo já existe na fila.') {
+                            showToast('error', 'Erro de Validação', validacao.erro);
+                            return;
+                        }
+                        
+                        const protocoloAntigo = item.protocolo;
+                        item.protocolo = novoProtocolo;
+                        
+                        salvarDados();
+                        aplicarFiltros();
+                        
+                        showToast('success', 'Protocolo Editado', `Protocolo ${protocoloAntigo} alterado para ${novoProtocolo}`);
+                        addActivity('edit', `Protocolo editado: ${protocoloAntigo} → ${novoProtocolo}`);
                     }
-                    
-                    const protocoloAntigo = item.protocolo;
-                    item.protocolo = novoProtocolo.trim();
-                    
-                    salvarDados();
-                    aplicarFiltros();
-                    
-                    showToast('success', 'Protocolo Editado', `Protocolo ${protocoloAntigo} alterado para ${novoProtocolo}`);
-                    addActivity('edit', `Protocolo editado: ${protocoloAntigo} → ${novoProtocolo}`);
+                    closeModal(modal);
                 }
             },
 
@@ -848,6 +1169,34 @@
             }
         };
 
+        // NOVO: Funções para seleção múltipla
+        const toggleSelection = (protocoloId, isSelected) => {
+            const index = state.selectedItems.indexOf(protocoloId);
+            if (isSelected && index === -1) {
+                state.selectedItems.push(protocoloId);
+            } else if (!isSelected && index !== -1) {
+                state.selectedItems.splice(index, 1);
+            }
+            document.querySelector(`tr[data-protocolo="${protocoloId}"]`)?.classList.toggle('selected', isSelected);
+            updateBulkActionsBar();
+        };
+
+        const clearSelection = () => {
+            state.selectedItems = [];
+            document.querySelectorAll('tr.selected').forEach(row => row.classList.remove('selected'));
+            document.querySelectorAll('.row-checkbox:checked').forEach(cb => cb.checked = false);
+            document.getElementById('selectAllCheckbox').checked = false;
+            updateBulkActionsBar();
+        };
+
+        const updateBulkActionsBar = () => {
+            const container = document.getElementById('bulk-actions-container');
+            const countSpan = document.getElementById('bulk-selected-count');
+            const hasSelection = state.selectedItems.length > 0;
+            container.style.display = hasSelection ? 'flex' : 'none';
+            countSpan.textContent = `${state.selectedItems.length} selecionados`;
+        };
+
         // Configuração de campos fixáveis
         const setupFixableField = (inputEl, fixBtn, changeBtn, storageKey) => {
             const fixValue = () => {
@@ -861,7 +1210,7 @@
                 inputEl.disabled = true;
                 fixBtn.style.display = 'none';
                 changeBtn.style.display = 'inline-block';
-                localStorage.setItem(storageKey, value);
+                localStorage.setItem(storageKey, value); // Usa a chave do localStorage
                 
                 showToast('success', 'Campo Fixado', `${inputEl.labels[0].textContent} foi fixado.`);
             };
@@ -870,7 +1219,7 @@
                 inputEl.disabled = false;
                 fixBtn.style.display = 'inline-block';
                 changeBtn.style.display = 'none';
-                localStorage.removeItem(storageKey);
+                localStorage.removeItem(storageKey); // Usa a chave do localStorage
                 inputEl.focus();
                 
                 showToast('info', 'Campo Liberado', `${inputEl.labels[0].textContent} foi liberado para edição.`);
@@ -1122,8 +1471,8 @@
             });
             
             // Campos fixáveis
-            setupFixableField(elements.conferente, elements.btnFixarConferente, elements.btnTrocarConferente, 'conferenteFixo_pro_v1');
-            setupFixableField(elements.convenio, elements.btnFixarConvenio, elements.btnTrocarConvenio, 'convenioFixo_pro_v1');
+            setupFixableField(elements.conferente, elements.btnFixarConferente, elements.btnTrocarConferente, STORAGE_KEYS.fixedConferente);
+            setupFixableField(elements.convenio, elements.btnFixarConvenio, elements.btnTrocarConvenio, STORAGE_KEYS.fixedConvenio);
             
             // Protocolo
             elements.btnAdicionar.addEventListener('click', adicionarProtocolo);
@@ -1134,6 +1483,35 @@
                 }
             });
             
+            // MELHORIA: Delegação de eventos na tabela
+            elements.tabelaCorpo.addEventListener('click', (e) => {
+                const button = e.target.closest('button[data-action]');
+                if (!button) return;
+
+                const action = button.dataset.action;
+                const index = parseInt(button.dataset.index, 10);
+
+                switch (action) {
+                    case 'conference':
+                        window.protonActions.conferirProtocolo(index);
+                        break;
+                    case 'edit':
+                        window.protonActions.editarProtocolo(index);
+                        break;
+                    case 'delete':
+                        window.protonActions.removerProtocolo(index);
+                        break;
+                }
+            });
+
+            // Evento para checkboxes de seleção
+            elements.tabelaCorpo.addEventListener('change', (e) => {
+                if (e.target.classList.contains('row-checkbox')) {
+                    const protocoloId = e.target.dataset.protocolo;
+                    toggleSelection(protocoloId, e.target.checked);
+                }
+            });
+
             // Modal lote
             elements.btnAbrirModalLote.addEventListener('click', () => {
                 elements.modalLote.style.display = 'block';
@@ -1151,6 +1529,11 @@
                 elements.modalConferencia.setAttribute('aria-hidden', 'true');
             });
             
+            // Adiciona listener para o novo ID do botão de cancelar lote
+            document.getElementById('btnCancelarLote').addEventListener('click', () => {
+                closeModal(elements.modalLote);
+            });
+
             // Fechar modais clicando fora
             window.addEventListener('click', (e) => {
                 if (e.target === elements.modalLote) {
@@ -1205,8 +1588,7 @@
                 
                 if (adicionados > 0) {
                     elements.listaProtocolosLote.value = '';
-                    elements.modalLote.style.display = 'none';
-                    elements.modalLote.setAttribute('aria-hidden', 'true');
+                    closeModal(elements.modalLote);
                     
                     salvarDados();
                     aplicarFiltros();
@@ -1256,10 +1638,10 @@
                         dados: state.baseDeDados,
                         atividades: state.atividades,
                         configuracoes: {
-                            conferente: localStorage.getItem('conferenteFixo_pro_v1'),
-                            convenio: localStorage.getItem('convenioFixo_pro_v1'),
+                            conferente: localStorage.getItem(STORAGE_KEYS.fixedConferente),
+                            convenio: localStorage.getItem(STORAGE_KEYS.fixedConvenio),
                             tema: localStorage.getItem('theme'),
-                            timerSeconds: localStorage.getItem('timer_seconds')
+                            timerSeconds: localStorage.getItem(STORAGE_KEYS.timerSeconds)
                         }
                     };
                     
@@ -1307,17 +1689,17 @@
                             
                             // Restaurar configurações
                             if (backup.configuracoes) {
-                                if (backup.configuracoes.conferente) {
-                                    localStorage.setItem('conferenteFixo_pro_v1', backup.configuracoes.conferente);
+                                if (backup.configuracoes.conferente) { // Usa as chaves do localStorage
+                                    localStorage.setItem(STORAGE_KEYS.fixedConferente, backup.configuracoes.conferente);
                                 }
                                 if (backup.configuracoes.convenio) {
-                                    localStorage.setItem('convenioFixo_pro_v1', backup.configuracoes.convenio);
+                                    localStorage.setItem(STORAGE_KEYS.fixedConvenio, backup.configuracoes.convenio);
                                 }
                                 if (backup.configuracoes.tema) {
                                     localStorage.setItem('theme', backup.configuracoes.tema);
                                 }
-                                if (backup.configuracoes.timerSeconds) {
-                                    localStorage.setItem('timer_seconds', backup.configuracoes.timerSeconds);
+                                if (backup.configuracoes.timerSeconds) { // Usa as chaves do localStorage
+                                    localStorage.setItem(STORAGE_KEYS.timerSeconds, backup.configuracoes.timerSeconds);
                                     state.timerSeconds = parseInt(backup.configuracoes.timerSeconds);
                                 }
                             }
@@ -1373,6 +1755,21 @@
                 }
             });
             
+            // NOVO: Event listeners para seleção em massa
+            document.getElementById('selectAllCheckbox').addEventListener('change', (e) => {
+                const isChecked = e.target.checked;
+                state.dadosFiltrados.forEach(item => {
+                    toggleSelection(item.protocolo, isChecked);
+                    const cb = document.querySelector(`.row-checkbox[data-protocolo="${item.protocolo}"]`);
+                    if (cb) cb.checked = isChecked;
+                });
+            });
+
+            document.getElementById('btnBulkConference').addEventListener('click', () => {
+                window.protonActions.conferirSelecionados();
+            });
+
+
             // Atalhos de teclado específicos do PROTON
             document.addEventListener('keydown', (e) => {
                 if (document.querySelector('.modal[style*="display: block"]')) return;
@@ -1417,15 +1814,18 @@
             
             // Aplicar filtros iniciais
             aplicarFiltros();
+
+            // Limpar seleção ao iniciar
+            clearSelection();
             
             // Restaurar timer se estava rodando
-            if (localStorage.getItem('timer_was_running') === 'true') {
+            if (localStorage.getItem(STORAGE_KEYS.timerRunning) === 'true') {
                 startTimer();
             }
             
             // Salvar estado do timer ao sair
             window.addEventListener('beforeunload', () => {
-                localStorage.setItem('timer_was_running', state.isTimerRunning);
+                localStorage.setItem(STORAGE_KEYS.timerRunning, state.isTimerRunning);
             });
         };
 
@@ -1468,11 +1868,6 @@
             chart: null
         };
 
-        // Utilitários
-        const getCssVariable = (variable) => {
-            return getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
-        };
-
         const saveState = () => {
             try {
                 localStorage.setItem(STORAGE_KEYS.ambulatorio, state.ambulatorioCount);
@@ -1513,12 +1908,12 @@
             }
         };
 
-const updateChart = (forPdf = false) => {
-    if (state.chart) {
-        state.chart.destroy();
-    }
-    
-    const containerColor = getCssVariable('--cor-container');
+        const updateChart = (forPdf = false) => {
+            if (state.chart) {
+                state.chart.destroy();
+            }
+            
+            const containerColor = getCssVariable('--cor-container');
     const ambulatorioColor = getCssVariable('--cor-ambulatório');
     const internacaoColor = getCssVariable('--cor-internação');
     
@@ -1526,18 +1921,7 @@ const updateChart = (forPdf = false) => {
     const isDarkMode = document.documentElement.classList.contains('dark-mode');
     const legendColor = forPdf ? '#000000' : (isDarkMode ? '#f1f5f9' : '#1e293b');
     
-    const ctx = elements.chartCanvas.getContext('2d');
-    
-    // Configurar canvas para melhor qualidade no PDF
-    if (forPdf) {
-        const dpr = window.devicePixelRatio || 1;
-        const rect = elements.chartCanvas.getBoundingClientRect();
-        elements.chartCanvas.width = rect.width * dpr * 2;
-        elements.chartCanvas.height = rect.height * dpr * 2;
-        ctx.scale(dpr * 2, dpr * 2);
-    }
-    
-    state.chart = new Chart(ctx, {
+            state.chart = new Chart(elements.chartCanvas, {
         type: 'doughnut',
         data: {
             labels: ['Ambulatório', 'Internação'],
@@ -1545,14 +1929,13 @@ const updateChart = (forPdf = false) => {
                 label: 'Quantidade',
                 data: [state.ambulatorioCount, state.internacaoCount],
                 backgroundColor: [ambulatorioColor, internacaoColor],
-                borderColor: forPdf ? '#ffffff' : containerColor,
-                borderWidth: forPdf ? 2 : 4
+                borderColor: containerColor,
+                borderWidth: 4
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            animation: false, // Desativar animações para melhorar o desempenho
             plugins: {
                 legend: {
                     position: 'bottom',
@@ -1566,40 +1949,32 @@ const updateChart = (forPdf = false) => {
                         }
                     }
                 },
-                whiteBackground: {
-                    enabled: forPdf
-                }
             },
             elements: {
                 arc: {
                     borderWidth: 3
                 }
             }
-        },
-        plugins: forPdf ? [whiteBackgroundPlugin] : []
-    });
-};
-
-// ADICIONAR TAMBÉM: Event listener para detectar mudança de tema
-// Adicione este código após a inicialização do contador:
-
-// Observar mudanças no tema para atualizar o gráfico
-const themeObserver = new MutationObserver((mutations) => {
-    mutations.forEach((mutation) => {
-        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-            // Reagendar a atualização do gráfico para o próximo frame
-            setTimeout(() => {
-                updateChart();
-            }, 100);
         }
     });
-});
+        };
 
-// Iniciar observação das mudanças de classe no elemento html
-themeObserver.observe(document.documentElement, {
-    attributes: true,
-    attributeFilter: ['class']
-});
+        // Observar mudanças no tema para atualizar o gráfico
+        const themeObserver = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                    // Atraso para garantir que as variáveis CSS foram atualizadas
+                    setTimeout(() => {
+                        updateChart();
+                    }, 50);
+                }
+            });
+        });
+
+        themeObserver.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['class']
+        });
         const generatePDF = async () => {
             try {
                 LoadingManager.show('Gerando relatório PDF...');
@@ -1647,15 +2022,8 @@ themeObserver.observe(document.documentElement, {
                     tempCanvas.height = 400;
                     const tempCtx = tempCanvas.getContext('2d');
                     
-                    // ==================================================================
-                    // INÍCIO DA CORREÇÃO: Usar as variáveis de cor do CSS no PDF
-                    // ==================================================================
                     const ambulatorioColorPDF = getCssVariable('--cor-ambulatório');
                     const internacaoColorPDF = getCssVariable('--cor-internação');
-                    // ==================================================================
-                    // FIM DA CORREÇÃO
-                    // ==================================================================
-                    
                     // Criar gráfico temporário no canvas maior
                     const tempChart = new Chart(tempCtx, {
                         type: 'doughnut',
@@ -1664,7 +2032,7 @@ themeObserver.observe(document.documentElement, {
                             datasets: [{
                                 label: 'Quantidade',
                                 data: [state.ambulatorioCount, state.internacaoCount],
-                                backgroundColor: [ambulatorioColorPDF, internacaoColorPDF], // Cores dinâmicas aplicadas
+                                backgroundColor: [ambulatorioColorPDF, internacaoColorPDF],
                                 borderColor: '#ffffff',
                                 borderWidth: 3
                             }]
@@ -1699,14 +2067,14 @@ themeObserver.observe(document.documentElement, {
                     });
                     
                     // Aguardar renderização
-                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    await new Promise(resolve => setTimeout(resolve, 500));
                     
                     const chartImage = tempCanvas.toDataURL('image/png', 1.0);
-                    const imgWidth = 120;
-                    const imgHeight = 120;
+                    const imgWidth = 100;
+                    const imgHeight = 100;
                     const imgX = (pageWidth - imgWidth) / 2;
                     const imgY = 140;
-                    
+
                     pdf.addImage(chartImage, 'PNG', imgX, imgY, imgWidth, imgHeight);
                     
                     // Limpar canvas temporário
