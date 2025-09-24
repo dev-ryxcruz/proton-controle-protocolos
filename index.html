@@ -61,11 +61,11 @@
                 <!-- Productivity timer -->
                 <div class="productivity-timer" id="productivityTimer">
                    <i class="fas fa-clock" aria-hidden="true"></i>
-                   <span id="timerDisplay" aria-label="Tempo decorrido">00:00:00</span>
-                   <button id="timerToggle" title="Iniciar/Pausar cronômetro" aria-label="Iniciar ou pausar o cronômetro">
+                   <span id="timerDisplay" aria-live="off">00:00:00</span>
+                   <button type="button" id="timerToggle" title="Iniciar/Pausar cronômetro" aria-label="Iniciar ou pausar o cronômetro">
                        <i class="fas fa-play" id="timerIcon" aria-hidden="true"></i>
                    </button>
-                   <button id="timerReset" title="Reiniciar cronômetro" aria-label="Reiniciar o cronômetro">
+                   <button type="button" id="timerReset" title="Reiniciar cronômetro" aria-label="Reiniciar o cronômetro">
                        <i class="fas fa-undo" aria-hidden="true"></i>
                    </button>
                 </div>
@@ -79,7 +79,7 @@
                 <div class="theme-switch-wrapper">
                     <label class="theme-switch" for="checkbox">
                         <input type="checkbox" id="checkbox" aria-label="Alternar entre tema claro e escuro" />
-                        <div class="slider" role="switch"></div>
+                        <div class="slider" role="switch" aria-checked="false"></div>
                     </label>
                 </div>
             </div>
@@ -110,8 +110,8 @@
                             </label>
                             <input type="text" id="conferente" placeholder="Digite seu nome" autocomplete="name" required>
                         </div>
-                        <button id="btnFixarConferente" class="btn-secondary">Fixar Nome</button>
-                        <button id="btnTrocarConferente" class="btn-secondary" style="display: none;">Trocar</button>
+                        <button type="button" id="btnFixarConferente" class="btn-secondary">Fixar Nome</button>
+                        <button type="button" id="btnTrocarConferente" class="btn-secondary" style="display: none;">Trocar</button>
                     </div>
                     <div class="input-group">
                         <div class="form-group">
@@ -127,8 +127,8 @@
                                 <option value="Internação">Internação</option>
                             </select>
                         </div>
-                        <button id="btnFixarConvenio" class="btn-secondary">Fixar</button>
-                        <button id="btnTrocarConvenio" class="btn-secondary" style="display: none;">Trocar</button>
+                        <button type="button" id="btnFixarConvenio" class="btn-secondary">Fixar</button>
+                        <button type="button" id="btnTrocarConvenio" class="btn-secondary" style="display: none;">Trocar</button>
                     </div>
                 </div>
                 <div class="form-group full-width">
@@ -152,10 +152,10 @@
                         <input type="text" id="numProtocolo" placeholder="Digite para adicionar um por um" pattern="[0-9]+" inputmode="numeric">
                         <div class="input-feedback" id="protocoloFeedback"></div>
                     </div>
-                    <button id="btnAdicionar" class="btn-primary">
+                    <button type="button" id="btnAdicionar" class="btn-primary">
                         <i class="fas fa-plus" aria-hidden="true"></i> Adicionar
                     </button>
-                    <button id="btnAbrirModalLote" class="btn-warning">
+                    <button type="button" id="btnAbrirModalLote" class="btn-warning">
                         <i class="fas fa-layer-group" aria-hidden="true"></i> Adicionar em Lote
                     </button>
                 </div>
@@ -168,7 +168,7 @@
                 </div>
                 <div class="search-bar">
                     <input type="text" id="searchInput" placeholder="Buscar por protocolo, convênio ou status..." aria-label="Campo de busca">
-                    <button id="btnClearSearch" class="clear-search-btn" title="Limpar busca" aria-label="Limpar campo de busca">
+                    <button type="button" id="btnClearSearch" class="clear-search-btn" title="Limpar busca" aria-label="Limpar campo de busca">
                         <i class="fas fa-times" aria-hidden="true"></i>
                     </button>
                 </div>
@@ -197,9 +197,38 @@
                         </label>
                         <input type="date" id="filterDate">
                     </div>
-                    <button id="btnClearFilters" class="btn-danger" style="align-self: flex-end;">
+                    <button type="button" id="btnClearFilters" class="btn-danger" style="align-self: flex-end;">
                         <i class="fas fa-times" aria-hidden="true"></i> Limpar Filtros
                     </button>
+                </div>
+            </section>
+
+            <!-- === NOVO: Legenda dos Símbolos === -->
+            <section class="legend-container">
+                <div class="legend-title">
+                    <i class="fas fa-info-circle"></i> Legenda dos Símbolos Indicadores
+                </div>
+                <div class="legend-items">
+                    <div class="legend-item">
+                        <div class="indicator-symbol indicator-amb">A</div>
+                        <span>Ambulatório</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="indicator-symbol indicator-cdi">C</div>
+                        <span>CDI</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="indicator-symbol indicator-ue">U</div>
+                        <span>UE</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="indicator-symbol indicator-int">I</div>
+                        <span>Internação</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="indicator-symbol indicator-obs">📝</div>
+                        <span>Com Observações</span>
+                    </div>
                 </div>
             </section>
 
@@ -248,16 +277,16 @@
 
             <!-- Action buttons -->
             <section class="actions">
-                <button id="gerarExcel" class="btn-success">
+                <button type="button" id="gerarExcel" class="btn-success">
                     <i class="fas fa-file-excel" aria-hidden="true"></i> Gerar Planilha Excel
                 </button>
-                <button id="btnBackup" class="btn-info">
+                <button type="button" id="btnBackup" class="btn-info">
                     <i class="fas fa-download" aria-hidden="true"></i> Backup Dados
                 </button>
-                <button id="btnRestore" class="btn-warning">
+                <button type="button" id="btnRestore" class="btn-warning">
                     <i class="fas fa-upload" aria-hidden="true"></i> Restaurar Dados
                 </button>
-                <button id="btnLimpar" class="btn-danger">
+                <button type="button" id="btnLimpar" class="btn-danger">
                     <i class="fas fa-trash" aria-hidden="true"></i> Limpar Todos os Dados
                 </button>
             </section>
@@ -268,26 +297,29 @@
                     <table role="table">
                         <thead>
                             <tr>
+                                <th scope="col" class="checkbox-cell">
+                                    <input type="checkbox" id="selectAllCheckbox" title="Selecionar todos" aria-label="Selecionar todos os protocolos visíveis">
+                                </th>
                                 <th scope="col">
-                                    <button class="sort-btn" data-column="protocolo" aria-label="Ordenar por protocolo">
+                                    <button type="button" class="sort-btn" data-column="protocolo" aria-label="Ordenar por protocolo">
                                         <i class="fas fa-hashtag" aria-hidden="true"></i> Protocolo
                                         <i class="fas fa-sort sort-icon" aria-hidden="true"></i>
                                     </button>
                                 </th>
                                 <th scope="col">
-                                    <button class="sort-btn" data-column="convenio" aria-label="Ordenar por convênio">
+                                    <button type="button" class="sort-btn" data-column="convenio" aria-label="Ordenar por convênio">
                                         <i class="fas fa-handshake" aria-hidden="true"></i> Convênio
                                         <i class="fas fa-sort sort-icon" aria-hidden="true"></i>
                                     </button>
                                 </th>
                                 <th scope="col">
-                                    <button class="sort-btn" data-column="status" aria-label="Ordenar por status">
+                                    <button type="button" class="sort-btn" data-column="status" aria-label="Ordenar por status">
                                         <i class="fas fa-info-circle" aria-hidden="true"></i> Status
                                         <i class="fas fa-sort sort-icon" aria-hidden="true"></i>
                                     </button>
                                 </th>
                                 <th scope="col">
-                                    <button class="sort-btn" data-column="dataRecebimento" aria-label="Ordenar por data">
+                                    <button type="button" class="sort-btn" data-column="dataRecebimento" aria-label="Ordenar por data">
                                         <i class="fas fa-calendar" aria-hidden="true"></i> Data
                                         <i class="fas fa-sort sort-icon" aria-hidden="true"></i>
                                     </button>
@@ -308,8 +340,16 @@
                 Nenhum documento processado ainda
             </p>
 
+            <!-- Barra de ações em massa -->
+            <div id="bulk-actions-container" class="bulk-actions-bar" style="display: none;">
+                <span id="bulk-selected-count" style="font-weight: 600; color: var(--cor-texto);">0 selecionados</span>
+                <button type="button" id="btnBulkConference" class="btn-success">
+                    <i class="fas fa-check-double" aria-hidden="true"></i> Conferir Selecionados
+                </button>
+            </div>
+
             <!-- History section -->
-            <button id="btnShowHistory" class="btn-info" style="margin-top: 20px;">
+            <button type="button" id="btnShowHistory" class="btn-info" style="margin-top: 20px;">
                 <i class="fas fa-history" aria-hidden="true"></i> Mostrar Histórico
             </button>
             <div id="activityHistory" style="display: none; margin-top: 20px; background: var(--cor-setup); padding: 20px; border-radius: 12px; border: 1px solid var(--cor-borda);">
@@ -329,8 +369,8 @@
                         <h2>Ambulatório</h2>
                         <p class="count" id="ambulatorio-count" aria-label="Contagem ambulatório">0</p>
                         <div class="counter-buttons">
-                            <button id="remove-ambulatorio-btn" class="btn-danger" aria-label="Diminuir contagem ambulatório">-1</button>
-                            <button id="add-ambulatorio-btn" class="btn-primary" aria-label="Aumentar contagem ambulatório">+1</button>
+                            <button type="button" id="remove-ambulatorio-btn" class="btn-danger" aria-label="Diminuir contagem ambulatório">-1</button>
+                            <button type="button" id="add-ambulatorio-btn" class="btn-primary" aria-label="Aumentar contagem ambulatório">+1</button>
                         </div>
                     </div>
                     <div class="chart-container">
@@ -340,8 +380,8 @@
                         <h2>Internação</h2>
                         <p class="count" id="internacao-count" aria-label="Contagem internação">0</p>
                         <div class="counter-buttons">
-                            <button id="remove-internacao-btn" class="btn-danger" aria-label="Diminuir contagem internação">-1</button>
-                            <button id="add-internacao-btn" class="btn-success" aria-label="Aumentar contagem internação">+1</button>
+                            <button type="button" id="remove-internacao-btn" class="btn-danger" aria-label="Diminuir contagem internação">-1</button>
+                            <button type="button" id="add-internacao-btn" class="btn-success" aria-label="Aumentar contagem internação">+1</button>
                         </div>
                     </div>
                     <div class="counter-card" id="total-card">
@@ -350,10 +390,10 @@
                     </div>
                 </div>
                 <div class="actions-area">
-                    <button id="pdf-btn" class="btn-info">
+                    <button type="button" id="pdf-btn" class="btn-info">
                         <i class="fas fa-file-pdf" aria-hidden="true"></i> Gerar Relatório PDF
                     </button>
-                    <button id="reset-btn" class="btn-danger">
+                    <button type="button" id="reset-btn" class="btn-danger">
                         <i class="fas fa-undo" aria-hidden="true"></i> Zerar Contagem
                     </button>
                 </div>
@@ -368,7 +408,7 @@
                 <h2 id="modal-lote-title">
                     <i class="fas fa-layer-group" aria-hidden="true"></i> Adicionar Protocolos em Lote
                 </h2>
-                <button id="fecharModal" class="close" aria-label="Fechar modal">&times;</button>
+                <button type="button" id="fecharModal" class="close" aria-label="Fechar modal">&times;</button>
             </div>
             <div class="modal-body">
                 <p>Cole a lista de números de protocolo abaixo (um por linha).</p>
@@ -378,10 +418,10 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="btnConfirmarLote" class="btn-success">
+                <button type="button" id="btnConfirmarLote" class="btn-success">
                     <i class="fas fa-check" aria-hidden="true"></i> Adicionar à Fila
                 </button>
-                <button class="btn-secondary" onclick="document.getElementById('modalLote').style.display='none'">
+                <button type="button" class="btn-secondary" id="btnCancelarLote">
                     Cancelar
                 </button>
             </div>
@@ -395,7 +435,7 @@
                 <h2 id="modal-conferencia-title">
                     <i class="fas fa-check-circle" aria-hidden="true"></i> Conferir Protocolo
                 </h2>
-                <button id="fecharModalConferencia" class="close" aria-label="Fechar modal">&times;</button>
+                <button type="button" id="fecharModalConferencia" class="close" aria-label="Fechar modal">&times;</button>
             </div>
             <div class="modal-body">
                 <div id="conferenciaForm"></div>
@@ -419,4 +459,3 @@
     </footer>
 </body>
 </html>
-
