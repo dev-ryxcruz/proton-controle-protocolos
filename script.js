@@ -505,16 +505,12 @@
                 return { valido: false, erro: 'Protocolo deve conter apenas números.' };
             }
             
-            if (protocoloLimpo.length < 3) {
-                return { valido: false, erro: 'Protocolo deve ter pelo menos 3 dígitos.' };
-            }
-            
-            if (protocoloLimpo.length > 20) {
-                return { valido: false, erro: 'Protocolo não pode ter mais de 20 dígitos.' };
+            if (protocoloLimpo.length !== 6) {
+                return { valido: false, erro: 'Protocolo deve ter exatamente 6 dígitos.' };
             }
             
             if (state.baseDeDados.some(item => item.protocolo === protocoloLimpo)) {
-                return { valido: false, erro: 'Protocolo já existe na fila.' };
+                return { valido: false, erro: 'Este protocolo já existe na fila.' };
             }
             
             return { valido: true };
