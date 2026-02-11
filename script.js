@@ -1024,7 +1024,9 @@
                     <div class="actions">
                         <button class="btn-success" onclick="window.protonActions.salvarConferencia(${index})">
                             <i class="fas fa-save" aria-hidden="true"></i> Salvar Conferência
+                            <i class="fas fa-save" aria-hidden="true"></i> Salvar Conferência
                         </button>
+                        <button type="button" class="btn-secondary" onclick="window.protonActions.closeActiveModal()">
                         <button type="button" class="btn-secondary" onclick="window.protonActions.closeActiveModal()">
                             Cancelar
                         </button>
