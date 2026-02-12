@@ -1707,3 +1707,38 @@ textarea:focus-visible {
     color: #64748b;
     font-size: 0.9rem;
 }
+/* === EASTER EGG: MATRIX MODE === */
+body.matrix-mode {
+    --cor-fundo: #000000 !important;
+    --cor-container: #0d0d0d !important;
+    --cor-texto: #00ff00 !important;
+    --cor-borda: #003300 !important;
+    --cor-cabecalho-tabela: #001a00 !important;
+    --cor-setup: #001100 !important;
+    --cor-primaria: #00ff00 !important;
+    --cor-primaria-hover: #00cc00 !important;
+    --cor-sucesso: #00ff00 !important;
+    --gradiente-primario: linear-gradient(135deg, #003300 0%, #00ff00 100%) !important;
+    --sombra-card: 0 0 10px #00ff00 !important;
+}
+
+body.matrix-mode * {
+    font-family: 'Courier New', Courier, monospace !important;
+    border-radius: 0 !important; /* Hackers não gostam de bordas redondas */
+}
+
+body.matrix-mode .header h1,
+body.matrix-mode .stat-card p,
+body.matrix-mode button {
+    text-shadow: 0 0 5px #00ff00;
+}
+
+body.matrix-mode ::placeholder {
+    color: rgba(0, 255, 0, 0.5) !important;
+}
+
+body.matrix-mode .indicator-symbol {
+    border: 1px solid #00ff00;
+    color: #000 !important;
+    background: #00ff00 !important;
+}
