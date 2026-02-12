@@ -113,8 +113,6 @@
   };
 
   // Inicialização da aplicação
-  // Inicialização da aplicação
-// Inicialização da aplicação
     const initializeApp = () => {
         LoadingManager.show('Inicializando PROTON...');
         
@@ -455,7 +453,12 @@
         );
       } catch (error) {
         console.error("Erro ao salvar dados:", error);
-        showToast("error", "Erro", "Falha ao salvar dados localmente.");
+        // QuotaExceededError = localStorage cheio
+        if (error.name === 'QuotaExceededError') {
+          showToast("error", "Limite Excedido", "Espaço de armazenamento local cheio.");
+        } else {
+          showToast("error", "Erro", "Falha ao salvar dados localmente.");
+        }
       }
     };
 
@@ -779,7 +782,11 @@
       const colors = labels.map((label) => themeColors[label]);
 
       if (state.tipoDocumentoChart) {
-        state.tipoDocumentoChart.destroy();
+        try {
+          state.tipoDocumentoChart.destroy();
+        } catch (e) {
+          console.warn("Aviso ao destruir gráfico anterior:", e);
+        }
       }
 
       if (data.length > 0) {
@@ -1024,9 +1031,7 @@
                     <div class="actions">
                         <button class="btn-success" onclick="window.protonActions.salvarConferencia(${index})">
                             <i class="fas fa-save" aria-hidden="true"></i> Salvar Conferência
-                            <i class="fas fa-save" aria-hidden="true"></i> Salvar Conferência
                         </button>
-                        <button type="button" class="btn-secondary" onclick="window.protonActions.closeActiveModal()">
                         <button type="button" class="btn-secondary" onclick="window.protonActions.closeActiveModal()">
                             Cancelar
                         </button>
@@ -2268,7 +2273,11 @@
 
     const updateChart = (forPdf = false) => {
       if (state.chart) {
-        state.chart.destroy();
+        try {
+          state.chart.destroy();
+        } catch (e) {
+          console.warn("Aviso ao destruir gráfico anterior:", e);
+        }
       }
 
       const containerColor = getCssVariable("--cor-container");
