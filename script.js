@@ -112,6 +112,87 @@
       .trim();
   };
 
+  // === MÓDULO: UX Enhancements (Ripple, Animações, Scroll-to-top, Confirm Modal) ===
+  const setupUX = () => {
+      // 1. Efeito Ripple em todos os botões
+      document.addEventListener('click', (e) => {
+          const btn = e.target.closest('button');
+          if (!btn || btn.classList.contains('scroll-to-top') || btn.classList.contains('sort-btn')) return;
+
+          const ripple = document.createElement('span');
+          ripple.classList.add('ripple');
+          const rect = btn.getBoundingClientRect();
+          const size = Math.max(rect.width, rect.height);
+          ripple.style.width  = ripple.style.height = `${size}px`;
+          ripple.style.left   = `${e.clientX - rect.left  - size / 2}px`;
+          ripple.style.top    = `${e.clientY - rect.top   - size / 2}px`;
+          btn.appendChild(ripple);
+          ripple.addEventListener('animationend', () => ripple.remove());
+      });
+
+      // 2. IntersectionObserver para animações de entrada
+      const observer = new IntersectionObserver((entries) => {
+          entries.forEach((entry, i) => {
+              if (entry.isIntersecting) {
+                  setTimeout(() => {
+                      entry.target.classList.add('animate-in');
+                  }, i * 80);
+                  observer.unobserve(entry.target);
+              }
+          });
+      }, { threshold: 0.08 });
+
+      document.querySelectorAll('[data-animate]').forEach(el => observer.observe(el));
+
+      // 3. Botão Scroll to Top
+      const scrollBtn = document.getElementById('scrollToTopBtn');
+      if (scrollBtn) {
+          window.addEventListener('scroll', () => {
+              scrollBtn.classList.toggle('visible', window.scrollY > 300);
+          }, { passive: true });
+
+          scrollBtn.addEventListener('click', () => {
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+          });
+      }
+  };
+
+  // === MÓDULO: Modal de Confirmação Customizado ===
+  const showConfirmModal = (title, message) => {
+      return new Promise((resolve) => {
+          const modal   = document.getElementById('confirmModal');
+          const titleEl = document.getElementById('confirmModalTitle');
+          const msgEl   = document.getElementById('confirmModalMessage');
+          const btnOk   = document.getElementById('confirmModalOk');
+          const btnCancel = document.getElementById('confirmModalCancel');
+
+          if (!modal) { resolve(window.confirm(message)); return; }
+
+          titleEl.textContent = title;
+          msgEl.textContent   = message;
+          modal.style.display = 'block';
+          modal.setAttribute('aria-hidden', 'false');
+          btnOk.focus();
+
+          const cleanup = (result) => {
+              modal.style.display = 'none';
+              modal.setAttribute('aria-hidden', 'true');
+              btnOk.removeEventListener('click', onOk);
+              btnCancel.removeEventListener('click', onCancel);
+              modal.removeEventListener('click', onOverlay);
+              resolve(result);
+          };
+
+          const onOk      = () => cleanup(true);
+          const onCancel  = () => cleanup(false);
+          const onOverlay = (e) => { if (e.target === modal) cleanup(false); };
+
+          btnOk.addEventListener('click', onOk);
+          btnCancel.addEventListener('click', onCancel);
+          modal.addEventListener('click', onOverlay);
+      });
+  };
+
   // Inicialização da aplicação
     const initializeApp = () => {
         LoadingManager.show('Inicializando PROTON...');
@@ -130,6 +211,9 @@
         
         // Inicializa a Command Palette
         setupCommandPalette();
+
+        // Inicializa os aprimoramentos de UX
+        setupUX();
 
         setTimeout(() => {
             LoadingManager.hide();
@@ -532,36 +616,43 @@
     const showUndoToast = (message, onUndo) => {
       const toastContainer = document.getElementById("toastContainer");
       const toast = document.createElement("div");
-      toast.className = "toast toast-info";
+      toast.className = "toast toast-undo";
+
+      const safeMessage = SecurityUtils.escapeHTML(message);
 
       toast.innerHTML = `
-                <div class="toast-icon"><i class="fas fa-trash-restore"></i></div>
+                <div class="toast-icon"><i class="fas fa-trash-restore" aria-hidden="true"></i></div>
                 <div class="toast-content">
                     <div class="toast-title">Ação Realizada</div>
-                    <div class="toast-message">${message}</div>
+                    <div class="toast-message">${safeMessage}</div>
                 </div>
-                <button class="btn-undo" style="background: white; color: var(--cor-texto); border: 1px solid var(--cor-borda); padding: 4px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; margin-left: 10px;">
-                    Desfazer
+                <button class="btn-undo-action" aria-label="Desfazer ação">Desfazer</button>
+                <button class="toast-close" aria-label="Fechar notificação">
+                    <i class="fas fa-times" aria-hidden="true"></i>
                 </button>
             `;
 
-      const btnUndo = toast.querySelector(".btn-undo");
+      const btnUndo  = toast.querySelector(".btn-undo-action");
+      const btnClose = toast.querySelector(".toast-close");
       let isUndone = false;
+
+      let autoRemoveTimer = setTimeout(() => {
+        if (!isUndone && toast.parentNode) removeToast(toast);
+      }, 6000);
 
       btnUndo.addEventListener("click", () => {
         isUndone = true;
+        clearTimeout(autoRemoveTimer);
         onUndo();
-        toast.remove();
+        removeToast(toast);
+      });
+
+      btnClose.addEventListener("click", () => {
+        clearTimeout(autoRemoveTimer);
+        removeToast(toast);
       });
 
       toastContainer.appendChild(toast);
-
-      setTimeout(() => {
-        if (!isUndone && toast.parentNode) {
-          toast.style.animation = "toastSlideIn 0.3s reverse";
-          setTimeout(() => toast.remove(), 300);
-        }
-      }, 5000);
     };
 
     const addActivity = (type, action, details = "") => {
@@ -666,14 +757,19 @@
       showToast("warning", "Timer Pausado", "Cronômetro pausado.");
     };
 
-    const resetTimer = () => {
+    const resetTimer = async () => {
       if (state.isTimerRunning) pauseTimer();
 
-      if (confirm("Tem certeza que deseja reiniciar o cronômetro?")) {
+      const confirmed = await showConfirmModal(
+        'Reiniciar Cronômetro',
+        'Tem certeza que deseja zerar o cronômetro? Esta ação não pode ser desfeita.'
+      );
+
+      if (confirmed) {
         state.timerSeconds = 0;
         localStorage.removeItem(STORAGE_KEYS.timerSeconds);
         updateTimerDisplay();
-        showToast("info", "Cronômetro Reiniciado", "O tempo foi zerado.");
+        showToast('info', 'Cronômetro Reiniciado', 'O tempo foi zerado.');
       }
     };
 
@@ -710,10 +806,22 @@
       }
     };
 
+    // Atualiza o badge de pendentes na tab
+    const updatePendingBadge = (pendentes) => {
+      const badge = document.getElementById('tabBadgePendentes');
+      if (!badge) return;
+      if (pendentes > 0) {
+        badge.textContent = pendentes > 99 ? '99+' : String(pendentes);
+        badge.style.display = 'inline-flex';
+      } else {
+        badge.style.display = 'none';
+      }
+    };
+
     const atualizarDashboard = () => {
       const total = state.dadosFiltrados.length;
       const processados = state.dadosFiltrados.filter(
-        (item) => item.status === "Baixado",
+        (item) => item.status === 'Baixado',
       ).length;
       const pendentes = total - processados;
       const taxa = total > 0 ? Math.round((processados / total) * 100) : 0;
@@ -725,7 +833,11 @@
 
       elements.progressBar.style.width = `${taxa}%`;
       elements.progressBar.textContent = `${taxa}%`;
-      elements.progressBar.setAttribute("aria-valuenow", taxa);
+      elements.progressBar.setAttribute('aria-valuenow', taxa);
+
+      // Atualiza o badge na tab
+      const pendentesTotal = state.baseDeDados.filter(item => item.status === 'Pendente').length;
+      updatePendingBadge(pendentesTotal);
 
       const convenios = [
         ...new Set(state.baseDeDados.map((item) => item.convenio)),
@@ -735,7 +847,7 @@
       elements.filterConvenio.innerHTML =
         '<option value="">Todos os Convênios</option>';
       convenios.forEach((convenio) => {
-        const option = document.createElement("option");
+        const option = document.createElement('option');
         option.value = convenio;
         option.textContent = convenio;
         elements.filterConvenio.appendChild(option);
@@ -2161,6 +2273,219 @@
       });
     };
 
+    // === MÓDULO: Modo de Digitação Rápida ===
+    const setupModoRapido = () => {
+      const MODO_RAPIDO_KEY = 'proton_modo_rapido';
+      let modoAtivo = localStorage.getItem(MODO_RAPIDO_KEY) === 'true';
+
+      const applyState = () => {
+        const btn   = document.getElementById('btnModoRapido');
+        const pill  = document.getElementById('modoRapidoPill');
+        const label = document.getElementById('modoRapidoLabel');
+        const input = elements.numProtocolo;
+
+        if (!btn) return;
+        btn.setAttribute('aria-pressed', String(modoAtivo));
+        btn.classList.toggle('modo-rapido-ativo', modoAtivo);
+        if (label) label.textContent = modoAtivo ? 'Modo Rápido: ON' : 'Modo Rápido';
+        if (pill)  pill.style.display = modoAtivo ? 'inline-flex' : 'none';
+        if (input) input.classList.toggle('input-modo-rapido', modoAtivo);
+      };
+
+      const toggle = () => {
+        modoAtivo = !modoAtivo;
+        localStorage.setItem(MODO_RAPIDO_KEY, String(modoAtivo));
+        applyState();
+        showToast(
+          modoAtivo ? 'success' : 'info',
+          modoAtivo ? '⚡ Modo Rápido Ativado' : 'Modo Rápido Desativado',
+          modoAtivo
+            ? 'Protocolo será adicionado automaticamente ao digitar 6 dígitos.'
+            : 'Clique em Adicionar para incluir protocolos.'
+        );
+      };
+
+      // Listener no input para auto-adicionar
+      elements.numProtocolo.addEventListener('input', () => {
+        if (!modoAtivo) return;
+        const val = elements.numProtocolo.value.trim();
+        if (val.length === 6 && /^\d{6}$/.test(val)) {
+          // Pequeno delay visual antes de adicionar
+          setTimeout(() => {
+            if (elements.numProtocolo.value.trim().length === 6) {
+              adicionarProtocolo();
+            }
+          }, 200);
+        }
+      });
+
+      const btn = document.getElementById('btnModoRapido');
+      if (btn) btn.addEventListener('click', toggle);
+
+      applyState();
+    };
+
+    // === MÓDULO: Relatório Diário com Timeline ===
+    const setupRelatorio = () => {
+      const modalRelatorio       = document.getElementById('modalRelatorio');
+      const btnRelatorio         = document.getElementById('btnRelatorio');
+      const fecharModalRelatorio = document.getElementById('fecharModalRelatorio');
+
+      if (!modalRelatorio || !btnRelatorio) return;
+
+      let relatorioChart = null;
+
+      const buildChart = () => {
+        const today = new Date().toLocaleDateString('pt-BR'); // DD/MM/YYYY
+
+        // Filtra atividades de hoje
+        const todayActs = state.atividades.filter(a => {
+          return a.timestamp && a.timestamp.startsWith(today);
+        });
+
+        // Agrupa por hora
+        const buckets = {};
+        for (let h = 0; h < 24; h++) buckets[h] = { add: 0, conference: 0 };
+
+        todayActs.forEach(a => {
+          const parts = a.timestamp.split(', ');
+          if (!parts[1]) return;
+          const hour = parseInt(parts[1].split(':')[0]);
+          if (isNaN(hour)) return;
+          if (a.type === 'add')        buckets[hour].add++;
+          if (a.type === 'conference') buckets[hour].conference++;
+        });
+
+        const activeHours = Object.keys(buckets).map(Number).filter(h => buckets[h].add + buckets[h].conference > 0);
+        // Se não houver dados, mostra range 8–17
+        const hours = activeHours.length > 0 ? activeHours : Array.from({length: 10}, (_, i) => i + 8);
+
+        const labels    = hours.map(h => `${String(h).padStart(2,'0')}h`);
+        const addData   = hours.map(h => buckets[h].add);
+        const confData  = hours.map(h => buckets[h].conference);
+
+        // Calcula stats
+        const totalAdd  = todayActs.filter(a => a.type === 'add').length;
+        const totalConf = todayActs.filter(a => a.type === 'conference').length;
+
+        const peakHour  = activeHours.length > 0
+          ? activeHours.reduce((p, h) => (buckets[h].add + buckets[h].conference) > (buckets[p].add + buckets[p].conference) ? h : p, activeHours[0])
+          : null;
+
+        const ritmo = activeHours.length > 0
+          ? (todayActs.length / activeHours.length).toFixed(1)
+          : '--';
+
+        // Atualiza mini-cards
+        document.getElementById('relatorioTotalAdicionados').textContent = totalAdd;
+        document.getElementById('relatorioTotalBaixados').textContent    = totalConf;
+        document.getElementById('relatorioHoraPico').textContent         = peakHour !== null ? `${String(peakHour).padStart(2,'0')}:00` : '--';
+        document.getElementById('relatorioRitmo').textContent            = ritmo;
+        document.getElementById('relatorioDataAtual').textContent        = `Dados de hoje — ${today}`;
+
+        // Wrapper
+        const wrapper = document.querySelector('.relatorio-chart-wrapper');
+        const canvas  = document.getElementById('relatorioTimelineChart');
+
+        // Sem dados
+        if (todayActs.length === 0) {
+          if (canvas) canvas.style.display = 'none';
+          if (wrapper && !wrapper.querySelector('.relatorio-empty')) {
+            const empty = document.createElement('div');
+            empty.className = 'relatorio-empty';
+            empty.innerHTML = '<i class="fas fa-moon"></i><span>Nenhuma atividade registrada hoje.</span><small>Comece adicionando protocolos!</small>';
+            wrapper.appendChild(empty);
+          }
+          return;
+        }
+
+        // Remove empty state se existia
+        const emptyEl = wrapper && wrapper.querySelector('.relatorio-empty');
+        if (emptyEl) emptyEl.remove();
+        if (canvas) canvas.style.display = '';
+
+        // Destrói gráfico anterior
+        if (relatorioChart) { try { relatorioChart.destroy(); } catch(e) {} }
+
+        const themeColors = getChartColors();
+
+        relatorioChart = new Chart(canvas, {
+          type: 'bar',
+          data: {
+            labels,
+            datasets: [
+              {
+                label: 'Adicionados',
+                data: addData,
+                backgroundColor: 'rgba(102,126,234,0.7)',
+                borderColor: '#764ba2',
+                borderWidth: 2,
+                borderRadius: 6,
+                borderSkipped: false,
+              },
+              {
+                label: 'Baixados',
+                data: confData,
+                backgroundColor: 'rgba(16,185,129,0.7)',
+                borderColor: '#059669',
+                borderWidth: 2,
+                borderRadius: 6,
+                borderSkipped: false,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                labels: { color: themeColors.Texto, usePointStyle: true, padding: 16, font: { size: 12 } },
+              },
+              tooltip: {
+                callbacks: {
+                  title: items => `Horário: ${items[0].label}`,
+                  label: item => ` ${item.dataset.label}: ${item.parsed.y}`,
+                },
+              },
+            },
+            scales: {
+              x: {
+                ticks: { color: themeColors.Texto },
+                grid:  { color: 'rgba(128,128,128,0.12)' },
+              },
+              y: {
+                beginAtZero: true,
+                ticks: { color: themeColors.Texto, stepSize: 1, precision: 0 },
+                grid:  { color: 'rgba(128,128,128,0.12)' },
+              },
+            },
+          },
+        });
+      };
+
+      // Abre modal
+      btnRelatorio.addEventListener('click', () => {
+        modalRelatorio.style.display = 'block';
+        modalRelatorio.setAttribute('aria-hidden', 'false');
+        buildChart();
+      });
+
+      // Fecha modal
+      if (fecharModalRelatorio) {
+        fecharModalRelatorio.addEventListener('click', () => {
+          modalRelatorio.style.display = 'none';
+          modalRelatorio.setAttribute('aria-hidden', 'true');
+        });
+      }
+
+      window.addEventListener('click', e => {
+        if (e.target === modalRelatorio) {
+          modalRelatorio.style.display = 'none';
+          modalRelatorio.setAttribute('aria-hidden', 'true');
+        }
+      });
+    };
+
     const init = () => {
       if (!elements.dataRecebimento.value) {
         elements.dataRecebimento.valueAsDate = new Date();
@@ -2169,15 +2494,17 @@
       setupProtocolValidation();
       setupSorting();
       setupEventListeners();
+      setupModoRapido();
+      setupRelatorio();
       updateTimerDisplay();
       aplicarFiltros();
       clearSelection();
 
-      if (localStorage.getItem(STORAGE_KEYS.timerRunning) === "true") {
+      if (localStorage.getItem(STORAGE_KEYS.timerRunning) === 'true') {
         startTimer();
       }
 
-      window.addEventListener("beforeunload", () => {
+      window.addEventListener('beforeunload', () => {
         localStorage.setItem(STORAGE_KEYS.timerRunning, state.isTimerRunning);
       });
     };

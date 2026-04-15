@@ -6,12 +6,16 @@
     <meta name="description" content="PROTON - Sistema de controle de protocolos e digitalização">
     <meta name="author" content="Ryan Cristian">
     <title>PROTON - Controle de Protocolos</title>
-    <link rel="icon" type="image/png" href="proton-logo.png"> 
-    
+    <link rel="icon" type="image/png" href="proton-logo.png">
+
     <!-- Preload critical resources -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style">
     <link rel="preload" href="style.css" as="style">
-    
+
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
@@ -87,18 +91,21 @@
 
         <!-- Navigation tabs -->
         <nav class="tabs" role="tablist">
-            <button class="tab-link active" data-tab="tab-proton" role="tab" aria-selected="true" aria-controls="tab-proton">
+            <button class="tab-link active" data-tab="tab-proton" role="tab" aria-selected="true" aria-controls="tab-proton" id="tab-btn-proton">
                 <i class="fas fa-file-alt" aria-hidden="true"></i> Controle de Protocolos
+                <span class="tab-badge" id="tabBadgePendentes" aria-label="protocolos pendentes" style="display:none;">0</span>
+                <span class="tab-indicator"></span>
             </button>
-            <button class="tab-link" data-tab="tab-contador" role="tab" aria-selected="false" aria-controls="tab-contador">
+            <button class="tab-link" data-tab="tab-contador" role="tab" aria-selected="false" aria-controls="tab-contador" id="tab-btn-contador">
                 <i class="fas fa-calculator" aria-hidden="true"></i> Contador de Digitalização
+                <span class="tab-indicator"></span>
             </button>
         </nav>
 
         <!-- Proton tab content -->
         <main id="tab-proton" class="tab-content active" role="tabpanel" aria-labelledby="tab-proton">
             <!-- Configuration section -->
-            <section class="setup-section">
+            <section class="setup-section" data-animate>
                 <div class="section-title">
                     <i class="fas fa-cog" aria-hidden="true"></i> Configuração do Dia
                 </div>
@@ -140,14 +147,23 @@
             </section>
 
             <!-- Add protocols section -->
-            <section class="setup-section">
-                <div class="section-title">
-                    <i class="fas fa-plus-circle" aria-hidden="true"></i> Adicionar Novos Protocolos
+            <section class="setup-section" data-animate>
+                <div class="section-title-row">
+                    <div class="section-title">
+                        <i class="fas fa-plus-circle" aria-hidden="true"></i> Adicionar Novos Protocolos
+                    </div>
+                    <button type="button" id="btnModoRapido" class="btn-modo-rapido" title="Modo de Digitação Rápida: adiciona ao digitar 6 dígitos" aria-pressed="false">
+                        <i class="fas fa-bolt" aria-hidden="true"></i>
+                        <span id="modoRapidoLabel">Modo Rápido</span>
+                    </button>
                 </div>
                 <div class="input-group">
                     <div class="form-group">
                         <label for="numProtocolo">
                             <i class="fas fa-hashtag" aria-hidden="true"></i> Nº do Protocolo
+                            <span id="modoRapidoPill" class="modo-rapido-pill" style="display:none;">
+                                <i class="fas fa-bolt"></i> AUTO
+                            </span>
                         </label>
                         <input type="text" id="numProtocolo" placeholder="Digite o protocolo de 6 dígitos" pattern="[0-9]{6}" maxlength="6" inputmode="numeric">
                         <div class="input-feedback" id="protocoloFeedback"></div>
@@ -162,7 +178,7 @@
             </section>
 
             <!-- Search and filters section -->
-            <section class="search-filters">
+            <section class="search-filters" data-animate>
                 <div class="section-title">
                     <i class="fas fa-search" aria-hidden="true"></i> Busca e Filtros
                 </div>
@@ -233,7 +249,7 @@
             </section>
 
             <!-- Dashboard section -->
-            <section class="setup-section">
+            <section class="setup-section" data-animate>
                 <div class="section-title">
                     <i class="fas fa-chart-pie" aria-hidden="true"></i> Dashboard e Estatísticas
                 </div>
@@ -277,6 +293,9 @@
 
             <!-- Action buttons -->
             <section class="actions">
+                <button type="button" id="btnRelatorio" class="btn-relatorio">
+                    <i class="fas fa-chart-bar" aria-hidden="true"></i> Relatório do Dia
+                </button>
                 <button type="button" id="gerarExcel" class="btn-success">
                     <i class="fas fa-file-excel" aria-hidden="true"></i> Gerar Planilha Excel
                 </button>
@@ -335,10 +354,22 @@
             </section>
 
             <!-- Empty state message -->
-            <p id="mensagemVazia" class="empty-state" style="text-align: center; padding: 20px; color: #777;">
-                <i class="fas fa-inbox fa-3x" style="display: block; margin-bottom: 16px; opacity: 0.5;"></i>
-                Nenhum documento processado ainda
-            </p>
+            <div id="mensagemVazia" class="empty-state">
+                <div class="empty-state-icon">
+                    <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <circle cx="60" cy="60" r="55" stroke="currentColor" stroke-width="2" stroke-dasharray="8 4" class="empty-circle"/>
+                        <rect x="35" y="32" width="50" height="60" rx="6" fill="currentColor" opacity="0.08"/>
+                        <rect x="40" y="38" width="40" height="6" rx="3" fill="currentColor" opacity="0.3"/>
+                        <rect x="40" y="50" width="30" height="4" rx="2" fill="currentColor" opacity="0.2"/>
+                        <rect x="40" y="60" width="35" height="4" rx="2" fill="currentColor" opacity="0.2"/>
+                        <rect x="40" y="70" width="20" height="4" rx="2" fill="currentColor" opacity="0.15"/>
+                        <circle cx="78" cy="80" r="16" fill="currentColor" opacity="0.06"/>
+                        <path d="M72 80 L76 84 L84 76" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.3"/>
+                    </svg>
+                </div>
+                <h3 class="empty-state-title">Nenhum protocolo adicionado</h3>
+                <p class="empty-state-desc">Adicione seu primeiro protocolo acima ou importe em lote para começar.</p>
+            </div>
 
             <!-- Barra de ações em massa -->
             <div id="bulk-actions-container" class="bulk-actions-bar" style="display: none;">
@@ -349,10 +380,10 @@
             </div>
 
             <!-- History section -->
-            <button type="button" id="btnShowHistory" class="btn-info" style="margin-top: 20px;">
+            <button type="button" id="btnShowHistory" class="btn-info btn-show-history">
                 <i class="fas fa-history" aria-hidden="true"></i> Mostrar Histórico
             </button>
-            <div id="activityHistory" style="display: none; margin-top: 20px; background: var(--cor-setup); padding: 20px; border-radius: 12px; border: 1px solid var(--cor-borda);">
+            <div id="activityHistory" class="activity-history-panel" style="display: none;">
                 <h4><i class="fas fa-history" aria-hidden="true"></i> Histórico de Atividades</h4>
                 <div id="activityList"></div>
             </div>
@@ -399,6 +430,66 @@
                 </div>
             </section>
         </main>
+    </div>
+
+    <!-- Scroll to top button -->
+    <button type="button" id="scrollToTopBtn" class="scroll-to-top" aria-label="Voltar ao topo" title="Voltar ao topo">
+        <i class="fas fa-chevron-up" aria-hidden="true"></i>
+    </button>
+
+    <!-- Custom confirm modal -->
+    <div id="confirmModal" class="modal confirm-modal" role="alertdialog" aria-labelledby="confirmModalTitle" aria-hidden="true">
+        <div class="modal-content confirm-modal-content">
+            <div class="confirm-modal-icon">
+                <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
+            </div>
+            <h3 id="confirmModalTitle" class="confirm-modal-title"></h3>
+            <p id="confirmModalMessage" class="confirm-modal-message"></p>
+            <div class="confirm-modal-actions">
+                <button type="button" id="confirmModalCancel" class="btn-secondary">Cancelar</button>
+                <button type="button" id="confirmModalOk" class="btn-danger">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Daily Report modal -->
+    <div id="modalRelatorio" class="modal" role="dialog" aria-labelledby="modal-relatorio-title" aria-hidden="true">
+        <div class="modal-content modal-relatorio-content">
+            <div class="modal-header">
+                <h2 id="modal-relatorio-title">
+                    <i class="fas fa-chart-bar" aria-hidden="true"></i> Relatório do Dia
+                </h2>
+                <button type="button" id="fecharModalRelatorio" class="close" aria-label="Fechar relatório">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="relatorio-mini-stats" id="relatorioMiniStats">
+                    <div class="relatorio-mini-card relatorio-card-add">
+                        <div class="relatorio-mini-icon"><i class="fas fa-plus-circle"></i></div>
+                        <div class="relatorio-mini-value" id="relatorioTotalAdicionados">0</div>
+                        <div class="relatorio-mini-label">Adicionados</div>
+                    </div>
+                    <div class="relatorio-mini-card relatorio-card-done">
+                        <div class="relatorio-mini-icon"><i class="fas fa-check-circle"></i></div>
+                        <div class="relatorio-mini-value" id="relatorioTotalBaixados">0</div>
+                        <div class="relatorio-mini-label">Baixados</div>
+                    </div>
+                    <div class="relatorio-mini-card relatorio-card-peak">
+                        <div class="relatorio-mini-icon"><i class="fas fa-fire"></i></div>
+                        <div class="relatorio-mini-value" id="relatorioHoraPico">--</div>
+                        <div class="relatorio-mini-label">Hora Pico</div>
+                    </div>
+                    <div class="relatorio-mini-card relatorio-card-rate">
+                        <div class="relatorio-mini-icon"><i class="fas fa-tachometer-alt"></i></div>
+                        <div class="relatorio-mini-value" id="relatorioRitmo">--</div>
+                        <div class="relatorio-mini-label">Ativ./hora</div>
+                    </div>
+                </div>
+                <div class="relatorio-chart-wrapper">
+                    <canvas id="relatorioTimelineChart" aria-label="Gráfico de atividades por hora do dia"></canvas>
+                </div>
+                <p id="relatorioDataAtual" class="relatorio-footer-text"></p>
+            </div>
+        </div>
     </div>
 
     <!-- Batch modal -->
@@ -452,10 +543,20 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
     <script src="script.js" defer></script>
 
-    <footer style="text-align: center; margin-top: 40px; padding: 20px; color: #94a3b8; font-size: 14px; border-top: 1px solid var(--cor-borda);">
-        <p>
-            Proton v1.4 | Desenvolvido por <strong>Ryan Cristian</strong> - Desenvolvedor Junior
-        </p>
+    <footer class="footer">
+        <div class="footer-content">
+            <span class="footer-logo-text">
+                <img src="proton-logo.png" alt="Logo PROTON" class="footer-logo-img">
+                PROTON
+            </span>
+            <span class="footer-version">v1.5</span>
+            <span class="footer-divider">·</span>
+            <span>Desenvolvido por <strong>Ryan Cristian</strong></span>
+            <span class="footer-divider">·</span>
+            <a href="https://dev-ryxcruz.github.io/proton-controle-protocolos/" target="_blank" rel="noopener" class="footer-link">
+                <i class="fas fa-external-link-alt" aria-hidden="true"></i> Ver Online
+            </a>
+        </div>
     </footer>
 </body>
 </html>
