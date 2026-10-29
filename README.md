@@ -1,12 +1,14 @@
+
 # 🚀 PROTON
-### Controle de Protocolos & Contador de Digitalização
+
+<h3 align="center">Controle de Protocolos & Contador de Digitalização</h3>
 
 <p align="center">
-  <img src="proton-logo.png" alt="Logo Proton" width="150">
+  <img src="proton-logo.png" alt="Logo Proton" width="180">
 </p>
 
 <p align="center">
-  **Mais produtividade, organização e controle em um só lugar.**
+  <strong>Mais produtividade, organização e controle em um só lugar.</strong>
 </p>
 
 <p align="center">
@@ -16,15 +18,16 @@
 </p>
 
 <p align="center">
-  ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white)
-  ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white)
-  ![JavaScript](https://img.shields.io/badge/JavaScript-ES6%2B-F7DF1E?style=flat-square&logo=javascript&logoColor=black)
-  ![Status](https://img.shields.io/badge/Status-Online-22C55E?style=flat-square)
+  <img src="https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white" alt="HTML5">
+  <img src="https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white" alt="CSS3">
+  <img src="https://img.shields.io/badge/JavaScript-ES6%2B-F7DF1E?style=flat-square&logo=javascript&logoColor=black" alt="JavaScript">
+  <img src="https://img.shields.io/badge/Status-Online-22C55E?style=flat-square" alt="Status Online">
 </p>
 
 ---
 
 ## 📌 Sobre o projeto
+
 
 O **Proton** é uma ferramenta de produtividade desenvolvida para otimizar e centralizar os processos de conferência de protocolos e contagem de documentos digitalizados.
 
