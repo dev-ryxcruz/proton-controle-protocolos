@@ -1,161 +1,309 @@
-#  Proton - Controle de Protocolos e Contador de Digitalização
+# 🚀 PROTON
+### Controle de Protocolos & Contador de Digitalização
 
-![Logo do Proton](proton-logo.png)
+<p align="center">
+  <img src="proton-logo.png" alt="Logo Proton" width="150">
+</p>
 
-Bem-vindo ao Proton, uma ferramenta de produtividade desenvolvida para otimizar e rastrear o processo de conferência de protocolos e contagem de documentos digitalizados.
+<p align="center">
+  **Mais produtividade, organização e controle em um só lugar.**
+</p>
 
-**🔗 Acesse a versão final aqui: [Proton Live](https://dev-ryxcruz.github.io/proton-controle-protocolos/)**
+<p align="center">
+  <a href="https://dev-ryxcruz.github.io/proton-controle-protocolos/">
+    <img src="https://img.shields.io/badge/🌐_ACESSAR_PROTON-2563EB?style=for-the-badge" alt="Acessar Proton">
+  </a>
+</p>
 
----
-
-## 🚀 Funcionalidades Principais
-
-Este projeto foi desenvolvido em duas partes principais, acessíveis através de um sistema de abas intuitivo:
-
-### 1. Aba: Controle de Protocolos
-A ferramenta principal para gerenciar o fluxo de recebimento e conferência de protocolos.
-
-* **Adição Rápida:** Adicione protocolos individualmente ou em lote (colando uma lista).
-* **Gestão de Status:** Marque protocolos como "Pendente" ou "Baixado" com um clique.
-* **Dashboard Interativo:** Visualize estatísticas em tempo real, como total de itens, processados, pendentes e a taxa de conclusão em uma barra de progresso.
-* **Gráfico de Documentos:** Um gráfico de rosca mostra a distribuição dos tipos de documentos processados (Ambulatório, CDI, UE, Internação).
-* **Busca e Filtros:** Pesquise por número de protocolo, convênio ou status. Filtre a visualização por status, convênio ou data de referência.
-* **Persistência de Dados:** Todos os dados são salvos localmente no seu navegador (`localStorage`), garantindo que seu trabalho não seja perdido ao recarregar a página.
-* **Exportação e Backup:**
-    * **Gerar Excel:** Exporte um relatório formatado em `.xlsx` com os protocolos conferidos.
-    * **Backup/Restore:** Salve e restaure todos os dados da aplicação em um arquivo `.json`.
-
-### 2. Aba: Contador de Digitalização
-Uma ferramenta simples e ágil para contagem manual de documentos durante o processo de digitalização.
-
-* **Contadores Individuais:** Botões dedicados para incrementar a contagem de "Ambulatório" e "Internação".
-* **Visualização Total:** Um card exibe a soma total dos documentos contados.
-* **Gráfico em Tempo Real:** Um gráfico de rosca é atualizado instantaneamente a cada clique, mostrando a proporção de cada tipo de documento.
-* **Exportação para PDF:** Gere um relatório em PDF com design profissional, incluindo o logo, as contagens e o gráfico, com um único clique.
-* **Persistência de Dados:** A contagem também é salva no `localStorage`, para que você possa continuar de onde parou.
-
-### 3. Aba: Novidades & Registro de Melhorias
-Canal transparente com a linha do tempo de todas as evoluções do sistema, permitindo que a equipe acompanhe a evolução do software.
-
-* **Estrutura Padronizada:** Cada melhoria detalha com clareza a **Data**, o **Motivo** (problema/necessidade que gerou a mudança) e o **Objetivo** (impacto positivo e metas operacionais).
-* **Filtros e Busca em Tempo Real:** Pesquisa rápida por palavras-chave e chips de filtragem por categoria (Produtividade, Interface & UX, Automação, Arquitetura) com alto contraste para tema claro e escuro.
-* **Badge Dinâmico e Command Palette:** Acesso direto através de atalhos e comando integrado no menu `Ctrl + K`.
+<p align="center">
+  ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white)
+  ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white)
+  ![JavaScript](https://img.shields.io/badge/JavaScript-ES6%2B-F7DF1E?style=flat-square&logo=javascript&logoColor=black)
+  ![Status](https://img.shields.io/badge/Status-Online-22C55E?style=flat-square)
+</p>
 
 ---
 
-## ✨ Recursos Adicionais
+## 📌 Sobre o projeto
 
-* **Tema Escuro (Dark Mode):** Alterne entre os temas claro e escuro para melhor conforto visual.
-* **Timer de Produtividade:** Um cronômetro integrado para monitorar o tempo gasto nas tarefas.
-* **Atalhos de Teclado:** Aumente sua agilidade com atalhos para as principais funções de cada aba. (Pressione `Ctrl + ?` para ver a lista).
-* **Design Responsivo:** A interface se adapta para uso em desktops e dispositivos móveis.
+O **Proton** é uma ferramenta de produtividade desenvolvida para otimizar e centralizar os processos de conferência de protocolos e contagem de documentos digitalizados.
+
+Com uma interface intuitiva e recursos de automação, o sistema permite acompanhar indicadores, gerenciar informações, gerar relatórios e manter o controle das atividades em um único ambiente.
+
+> Desenvolvido com foco em produtividade, simplicidade e eficiência operacional.
 
 ---
 
-## 📁 Estrutura Modular do Projeto
+## ✨ Funcionalidades
 
-Para garantir alta manutenibilidade, separação de responsabilidades e facilidade na evolução do código, o sistema foi refatorado e dividido em módulos coesos:
+O Proton é dividido em três módulos principais, complementados por recursos adicionais que tornam a experiência mais completa.
+
+### 📋 01. Controle de Protocolos
+
+Gerenciamento completo do fluxo de recebimento, conferência e baixa de protocolos.
+
+| Recurso | Descrição |
+|---|---|
+| ➕ Adição rápida | Cadastro individual ou em lote por meio de listas. |
+| 🔄 Gestão de status | Alteração entre Pendente e Baixado. |
+| 📊 Dashboard | Indicadores em tempo real e taxa de conclusão. |
+| 🍩 Gráfico de documentos | Distribuição por Ambulatório, CDI, UE e Internação. |
+| 🔎 Busca inteligente | Pesquisa por protocolo, convênio ou status. |
+| 🎯 Filtros avançados | Filtragem por status, convênio e data de referência. |
+| 💾 Persistência | Armazenamento local utilizando `localStorage`. |
+| 📤 Exportação Excel | Geração de relatórios formatados em `.xlsx`. |
+| 🔐 Backup e restauração | Exportação e recuperação dos dados em `.json`. |
+
+### 🔢 02. Contador de Digitalização
+
+Contagem rápida e prática de documentos durante o processo de digitalização.
+
+| Recurso | Descrição |
+|---|---|
+| 🏥 Contadores individuais | Contagem independente de Ambulatório e Internação. |
+| 📈 Totalizador | Soma automática dos documentos contabilizados. |
+| 🍩 Gráfico dinâmico | Atualização instantânea da distribuição dos documentos. |
+| 📄 Exportação PDF | Relatório visual com logo, contagens e gráfico. |
+| 💾 Persistência | Salvamento automático no `localStorage`. |
+
+### 📰 03. Novidades & Melhorias
+
+Uma linha do tempo que documenta a evolução do sistema e mantém a equipe informada sobre as atualizações.
+
+- **Histórico estruturado:** cada melhoria apresenta data, motivo e objetivo.
+- **Busca em tempo real:** localização rápida de melhorias por palavras-chave.
+- **Filtros por categoria:** Produtividade, Interface & UX, Automação e Arquitetura.
+- **Command Palette:** acesso rápido pelo atalho `Ctrl + K`.
+- **Interface adaptativa:** filtros e indicadores compatíveis com os temas claro e escuro.
+
+---
+
+## ⚡ Recursos adicionais
+
+Além dos módulos principais, o Proton oferece funcionalidades que melhoram a experiência de utilização.
+
+| Recurso | Funcionalidade |
+|---|---|
+| 🌙 Dark Mode | Alternância entre temas claro e escuro. |
+| ⏱️ Timer | Cronômetro integrado para acompanhamento da produtividade. |
+| ⌨️ Atalhos | Comandos rápidos para agilizar operações. |
+| 🎨 Design responsivo | Interface adaptável para desktops e dispositivos móveis. |
+| 🧩 Command Palette | Navegação e execução rápida de comandos com `Ctrl + K`. |
+| 🟢 Matrix Mode | Easter egg ativado pelo Konami Code. |
+
+---
+
+## 🏗️ Arquitetura do projeto
+
+O Proton utiliza uma arquitetura modular, organizada por responsabilidades e com separação entre apresentação, lógica de negócio e serviços.
+
+Essa estrutura facilita a manutenção, a identificação de problemas e a implementação de novas funcionalidades.
+
+<details>
+<summary><strong>📂 Visualizar estrutura completa de diretórios</strong></summary>
 
 ```text
 proton-controle-protocolos/
-├── index.html                   # Estrutura HTML da aplicação e carregador inteligente
-├── proton-logo.png              # Logotipo oficial
-├── package.json                 # Scripts de desenvolvimento e testes
 │
-├── css/                         # Camada de Apresentação e Estilos
-│   ├── main.css                 # Master stylesheet (importa todos os módulos)
-│   ├── variables.css            # Design tokens, variáveis CSS e tema escuro
-│   ├── base.css                 # Reset, tipografia, glassmorphism e overlay
-│   ├── responsive.css           # Media queries de responsividade e acessibilidade
-│   ├── print.css                # Guia física de impressão (@media print) e assinaturas
-│   ├── layout/                  # Componentes de layout
-│   │   ├── header.css           # Topo, branding e alternador de tema
-│   │   ├── tabs.css             # Navegação de abas e badges de pendentes
-│   │   └── footer.css           # Rodapé da aplicação
-│   └── components/              # Componentes de interface
-│       ├── buttons.css          # Botões padrão, pins/trava e estados de loading
-│       ├── cards.css            # Cards do setup, dashboard e legendas
-│       ├── forms.css            # Inputs, selects estilizados e foco
-│       ├── table.css            # Tabela de protocolos, badges e edição inline
-│       ├── modals.css           # Modais de conferência, lote, relatório e confirmação
-│       ├── toasts.css           # Notificações toast padrão e toast de desfazer (5s)
-│       ├── palette.css          # Command Palette (Ctrl + K)
-│       ├── timer.css            # Cronômetro de produtividade e atalhos
-│       ├── contador.css         # Cards e layout do contador manual
-│       ├── novidades.css        # Timeline, cards e filtros da aba de novidades
-│       ├── ux.css               # Efeito ripple e botão scroll-to-top
-│       └── easteregg.css        # Matrix Mode (Konami Code)
+├── index.html
+├── proton-logo.png
+├── package.json
 │
-└── js/                          # Camada de Lógica e Arquitetura ES Modules
-    ├── app.js                   # Ponto de entrada (orquestra inicialização e abas)
+├── css/
+│   ├── main.css
+│   ├── variables.css
+│   ├── base.css
+│   ├── responsive.css
+│   ├── print.css
+│   │
+│   ├── layout/
+│   │   ├── header.css
+│   │   ├── tabs.css
+│   │   └── footer.css
+│   │
+│   └── components/
+│       ├── buttons.css
+│       ├── cards.css
+│       ├── forms.css
+│       ├── table.css
+│       ├── modals.css
+│       ├── toasts.css
+│       ├── palette.css
+│       ├── timer.css
+│       ├── contador.css
+│       ├── novidades.css
+│       ├── ux.css
+│       └── easteregg.css
+│
+└── js/
+    ├── app.js
+    │
     ├── constants/
-    │   └── storage.js           # Chaves de persistência local e sessão
+    │   └── storage.js
+    │
     ├── utils/
-    │   ├── security.js          # Sanitização e escape contra injeção XSS
-    │   ├── helpers.js           # Formatadores de data, debounce e throttle
-    │   └── symbols.js           # Renderização segura de símbolos indicadores
+    │   ├── security.js
+    │   ├── helpers.js
+    │   └── symbols.js
+    │
     ├── components/
-    │   ├── loading.js           # Overlay de carregamento
-    │   ├── toast.js             # Toasts informativos e toast de desfazer (5s)
-    │   ├── modal.js             # Modal assíncrono de confirmação e controle de foco
-    │   ├── timer.js             # Lógica e ciclo de vida do cronômetro
-    │   ├── theme.js             # Alternador e persistência de tema claro/escuro
-    │   ├── palette.js           # Command Palette rápida (Ctrl + K)
-    │   ├── shortcuts.js         # Atalhos globais de teclado
-    │   └── ux.js                # Ripple nos botões e scroll-to-top
+    │   ├── loading.js
+    │   ├── toast.js
+    │   ├── modal.js
+    │   ├── timer.js
+    │   ├── theme.js
+    │   ├── palette.js
+    │   ├── shortcuts.js
+    │   └── ux.js
+    │
     ├── services/
-    │   ├── excelService.js      # Exportação formatada e importação reversa (ExcelJS)
-    │   └── pdfService.js        # Geração de relatório visual em PDF (jsPDF + Chart.js)
+    │   ├── excelService.js
+    │   └── pdfService.js
+    │
     └── modules/
-        ├── protocolo/           # Módulo principal de Controle de Protocolos
-        │   ├── index.js         # Orquestrador do fluxo e gestão central (syncApp)
-        │   ├── validation.js    # Regras de validação de protocolos
-        │   ├── pins.js          # Fixação (pin/lock) de campos recorrentes
-        │   ├── chart.js         # Gráfico reativo com Chart.update()
-        │   ├── table.js         # Renderização da tabela e edição inline
-        │   ├── conference.js    # Modais de conferência individual e sequencial
-        │   └── report.js        # Relatório diário de produtividade e timeline
-        ├── contador/            # Módulo de Contagem de Digitalização
-        │   └── index.js         # Lógica do contador manual e atalhos
-        ├── novidades/           # Módulo de Novidades e Registro de Melhorias
-        │   └── index.js         # Linha do tempo, filtros, motivos, objetivos e modal
-        └── easterEgg.js         # Konami Code (Matrix Mode)
+        ├── protocolo/
+        │   ├── index.js
+        │   ├── validation.js
+        │   ├── pins.js
+        │   ├── chart.js
+        │   ├── table.js
+        │   ├── conference.js
+        │   └── report.js
+        │
+        ├── contador/
+        │   └── index.js
+        │
+        ├── novidades/
+        │   └── index.js
+        │
+        └── easterEgg.js
 ```
 
----
+</details>
 
-## 🛠️ Tecnologias Utilizadas
+### Organização arquitetural
 
-* **HTML5 Semântico:** Estruturação acessível do conteúdo.
-* **CSS3 Modular:** Variáveis de design (tokens), Flexbox, Grid, Glassmorphism e estilos de impressão.
-* **JavaScript ES6+ (Native Modules):** Separação de responsabilidades sem acoplamento.
-* **Bibliotecas Externas (via CDN):**
-    * [Chart.js](https://www.chartjs.org/): Criação e atualização de gráficos reativos.
-    * [ExcelJS](https://github.com/exceljs/exceljs): Geração e leitura de planilhas `.xlsx`.
-    * [jsPDF](https://github.com/parallax/jsPDF): Geração de relatórios em PDF com design profissional.
-    * [Font Awesome](https://fontawesome.com/): Ícones da interface.
+- **CSS:** apresentação, identidade visual, componentes e responsividade.
+- **JS / Components:** componentes reutilizáveis e funcionalidades globais.
+- **JS / Utils:** funções auxiliares e mecanismos de segurança.
+- **JS / Services:** serviços responsáveis pelas exportações.
+- **JS / Modules:** módulos independentes de cada funcionalidade.
 
 ---
 
-## ⚙️ Como Executar Localmente
+## 🛠️ Tecnologias utilizadas
 
-### Opção 1: Servidor Local (Recomendado para Desenvolvimento)
-Com o Node.js instalado:
+### Core
+
+| Tecnologia | Aplicação |
+|---|---|
+| HTML5 | Estrutura semântica e acessível. |
+| CSS3 | Estilização modular, Flexbox, Grid e design responsivo. |
+| JavaScript ES6+ | Lógica da aplicação e módulos nativos. |
+
+### Bibliotecas e dependências
+
+| Biblioteca | Finalidade |
+|---|---|
+| [Chart.js](https://www.chartjs.org/) | Criação e atualização de gráficos. |
+| [ExcelJS](https://github.com/exceljs/exceljs) | Exportação e leitura de planilhas Excel. |
+| [jsPDF](https://github.com/parallax/jsPDF) | Geração de relatórios em PDF. |
+| [Font Awesome](https://fontawesome.com/) | Ícones da interface. |
+
+---
+
+## 💻 Executando localmente
+
+Você pode executar o Proton diretamente no seu computador.
+
+### Pré-requisitos
+
+- Node.js instalado (para utilizar os scripts npm).
+- Navegador moderno com suporte a JavaScript ES Modules.
+
+### 1. Clone o repositório
+
+```bash
+git clone https://github.com/dev-ryxcruz/proton-controle-protocolos.git
+```
+
+### 2. Entre na pasta
+
+```bash
+cd proton-controle-protocolos
+```
+
+### 3. Inicie o servidor local
+
 ```bash
 npm start
-# ou
+```
+
+Ou, alternativamente:
+
+```bash
 npx serve .
 ```
-Acesse `http://localhost:3000` no seu navegador. Os módulos ES6 serão carregados nativamente.
 
-Para verificar a sintaxe e integridade dos módulos a qualquer momento:
+Acesse no navegador:
+
+```text
+http://localhost:3000
+```
+
+### 4. Verifique a integridade dos módulos
+
+Para verificar a sintaxe e a integridade dos arquivos JavaScript:
+
 ```bash
 npm run verify
 ```
 
-### Opção 2: Abrir Diretamente via Arquivo (`file://`)
-Você também pode abrir diretamente o arquivo `index.html` com dois cliques. O carregador inteligente do Proton detectará a execução local e fará o carregamento transparente.
+### Execução alternativa
+
+Também é possível abrir diretamente o arquivo `index.html` com dois cliques.
+
+O carregador inteligente do Proton identifica a execução local e realiza o carregamento conforme a configuração da aplicação.
 
 ---
 
-Desenvolvido por **Ryan Cristian** - Desenvolvedor Junior.
+## ⌨️ Atalhos de teclado
+
+O Proton conta com atalhos para agilizar a navegação e a utilização das funcionalidades.
+
+| Atalho | Ação |
+|---|---|
+| `Ctrl + K` | Abrir Command Palette. |
+| `Ctrl + ?` | Consultar lista de atalhos. |
+
+*Consulte a interface do sistema para conhecer os demais comandos disponíveis.*
+
+---
+
+## 🔒 Armazenamento e segurança
+
+O Proton utiliza armazenamento local do navegador (`localStorage`) para manter os dados entre sessões.
+
+Também conta com mecanismos de sanitização e escape de conteúdo para reduzir riscos de injeção de código, além de recursos de backup e restauração.
+
+**Importante:** os dados permanecem armazenados no navegador utilizado. Limpar os dados do site ou utilizar outro navegador pode exigir a restauração de um backup.
+
+---
+
+## 👨‍💻 Desenvolvedor
+
+<p align="center">
+  <strong>Ryan Cristian Alves da Cruz</strong>
+  <br>
+  Desenvolvedor Junior
+  <br><br>
+  <a href="https://github.com/dev-ryxcruz">
+    <img src="https://img.shields.io/badge/GitHub-dev--ryxcruz-181717?style=for-the-badge&logo=github" alt="GitHub">
+  </a>
+</p>
+
+<p align="center">
+  Desenvolvido com dedicação, tecnologia e foco na produtividade.
+  <br>
+  <strong>PROTON © 2026</strong>
+</p>
