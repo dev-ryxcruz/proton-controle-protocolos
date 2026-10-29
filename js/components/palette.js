@@ -104,6 +104,12 @@ export const setupCommandPalette = () => {
       action: () => document.querySelector('[data-tab="tab-contador"]')?.click(),
     },
     {
+      id: "tab-novidades",
+      icon: "fa-bullhorn",
+      name: "Ir para Aba: Novidades & Melhorias",
+      action: () => document.querySelector('[data-tab="tab-novidades"]')?.click(),
+    },
+    {
       id: "shortcuts",
       icon: "fa-keyboard",
       name: "Mostrar Atalhos de Teclado",

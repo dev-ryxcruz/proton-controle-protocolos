@@ -1,0 +1,455 @@
+/* ============================================================
+   PROTON v1.5 - Componente de Novidades & Registro de Melhorias
+   Aba dedicada com linha do tempo, motivo, objetivo e filtros
+   ============================================================ */
+
+/* --- Hero Banner das Novidades --- */
+.novidades-hero {
+    background: var(--cor-setup);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--radius-card);
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: var(--sombra-card);
+    transition: var(--transicao-padrao);
+}
+
+.novidades-hero-content {
+    margin-bottom: 20px;
+}
+
+.novidades-hero-title-area {
+    width: 100%;
+}
+
+.novidades-subtitle {
+    font-size: 14px;
+    color: #64748b;
+    margin: 4px 0 0 0;
+    line-height: 1.5;
+}
+
+html.dark-mode .novidades-subtitle {
+    color: #94a3b8;
+}
+
+/* --- Pills de Estatísticas no Topo --- */
+.novidades-stats-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 18px;
+    border-bottom: 1px dashed var(--cor-borda);
+}
+
+.novidade-stat-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    background: var(--cor-container);
+    border: 1px solid var(--cor-borda);
+    border-radius: 99px;
+    font-size: 13px;
+    color: var(--cor-texto);
+    font-weight: 500;
+}
+
+.novidade-stat-pill i {
+    color: var(--cor-primaria);
+}
+
+/* --- Barra de Busca e Filtros de Categoria --- */
+.novidades-filters-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.novidades-search-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.novidades-search-box i.fa-search {
+    position: absolute;
+    left: 14px;
+    color: #94a3b8;
+    pointer-events: none;
+}
+
+.novidades-search-box input {
+    width: 100%;
+    padding: 12px 40px 12px 38px;
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--radius-input);
+    font-size: 14px;
+    background: var(--cor-container);
+    color: var(--cor-texto);
+    transition: var(--transicao-padrao);
+}
+
+.novidades-search-box input:focus {
+    outline: none;
+    border-color: var(--cor-primaria);
+    box-shadow: 0 0 0 3px rgba(79, 110, 247, 0.15);
+}
+
+.novidades-search-box .clear-search-btn {
+    position: absolute;
+    right: 10px;
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 6px;
+    font-size: 14px;
+    line-height: 1;
+}
+
+.novidades-search-box .clear-search-btn:hover {
+    color: var(--cor-perigo);
+}
+
+/* --- Chips de Filtragem de Categoria --- */
+.novidades-category-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.category-chip {
+    padding: 7px 16px;
+    border-radius: 99px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--cor-borda);
+    background: var(--cor-container);
+    color: #475569;
+    transition: var(--transicao-padrao);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.2;
+    white-space: nowrap;
+    user-select: none;
+    font-family: inherit;
+}
+
+.category-chip:hover {
+    border-color: var(--cor-primaria);
+    color: var(--cor-primaria);
+    background: rgba(79, 110, 247, 0.08);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.category-chip.active {
+    background: var(--gradiente-primario) !important;
+    color: #ffffff !important;
+    border-color: transparent !important;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.35);
+    font-weight: 700;
+}
+
+/* Dark Mode - Chips de Categoria */
+html.dark-mode .category-chip {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.12);
+    color: #e2e8f0;
+}
+
+html.dark-mode .category-chip:hover {
+    background: rgba(124, 140, 248, 0.18);
+    border-color: var(--cor-primaria);
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+html.dark-mode .category-chip.active {
+    background: var(--gradiente-primario) !important;
+    color: #ffffff !important;
+    border-color: transparent !important;
+    box-shadow: 0 4px 14px rgba(102, 126, 234, 0.5) !important;
+    font-weight: 700;
+}
+
+/* --- Container e Timeline das Novidades --- */
+.novidades-timeline-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* --- Card Individual de Melhoria --- */
+.melhoria-card {
+    background: var(--cor-container);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--radius-card);
+    padding: 24px;
+    box-shadow: var(--sombra-card);
+    transition: var(--transicao-padrao);
+    position: relative;
+    overflow: hidden;
+}
+
+.melhoria-card:hover {
+    box-shadow: var(--sombra-hover);
+    transform: translateY(-2px);
+    border-color: rgba(79, 110, 247, 0.3);
+}
+
+.melhoria-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 5px;
+    height: 100%;
+    background: var(--gradiente-primario);
+}
+
+/* Topo do Card */
+.melhoria-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--cor-borda);
+}
+
+.melhoria-header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.melhoria-meta-tags {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.melhoria-badge-versao {
+    background: var(--gradiente-primario);
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 99px;
+    letter-spacing: 0.5px;
+}
+
+.melhoria-badge-categoria {
+    background: var(--cor-setup);
+    color: var(--cor-primaria);
+    border: 1px solid var(--cor-borda);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 99px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.melhoria-titulo {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--cor-texto);
+    margin: 4px 0 0 0;
+    line-height: 1.3;
+}
+
+.melhoria-header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.melhoria-data-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: var(--cor-setup);
+    border: 1px solid var(--cor-borda);
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--cor-texto);
+    white-space: nowrap;
+}
+
+.melhoria-data-badge i {
+    color: var(--cor-primaria);
+}
+
+/* --- Blocos Obrigatórios: Motivo e Objetivo --- */
+.melhoria-sections {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+@media (max-width: 768px) {
+    .melhoria-sections {
+        grid-template-columns: 1fr;
+    }
+}
+
+.melhoria-bloco {
+    padding: 16px;
+    border-radius: 10px;
+    transition: var(--transicao-padrao);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Bloco do Motivo */
+.melhoria-bloco-motivo {
+    background: #fffdf5;
+    border: 1px solid #fef3c7;
+    border-left: 4px solid var(--cor-aviso);
+}
+
+html.dark-mode .melhoria-bloco-motivo {
+    background: rgba(245, 158, 11, 0.08);
+    border-color: rgba(245, 158, 11, 0.2);
+    border-left-color: var(--cor-aviso);
+}
+
+/* Bloco do Objetivo */
+.melhoria-bloco-objetivo {
+    background: #f8faff;
+    border: 1px solid #dbeafe;
+    border-left: 4px solid var(--cor-primaria);
+}
+
+html.dark-mode .melhoria-bloco-objetivo {
+    background: rgba(79, 110, 247, 0.08);
+    border-color: rgba(79, 110, 247, 0.2);
+    border-left-color: var(--cor-primaria);
+}
+
+.melhoria-bloco-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.melhoria-bloco-motivo .melhoria-bloco-header {
+    color: #b45309;
+}
+
+html.dark-mode .melhoria-bloco-motivo .melhoria-bloco-header {
+    color: #fbbf24;
+}
+
+.melhoria-bloco-objetivo .melhoria-bloco-header {
+    color: #1d4ed8;
+}
+
+html.dark-mode .melhoria-bloco-objetivo .melhoria-bloco-header {
+    color: #93c5fd;
+}
+
+.melhoria-bloco-texto {
+    font-size: 14px;
+    color: var(--cor-texto);
+    line-height: 1.55;
+    margin: 0;
+    flex: 1;
+}
+
+/* --- Destaques / Itens Entregues --- */
+.melhoria-destaques {
+    background: var(--cor-setup);
+    border-radius: 10px;
+    padding: 14px 18px;
+    border: 1px solid var(--cor-borda);
+}
+
+.melhoria-destaques h4 {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--cor-texto);
+    margin: 0 0 10px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.melhoria-destaques h4 i {
+    color: var(--cor-sucesso);
+}
+
+.melhoria-destaques-lista {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 8px 16px;
+}
+
+.melhoria-destaques-lista li {
+    font-size: 13.5px;
+    color: var(--cor-texto);
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    line-height: 1.4;
+}
+
+.melhoria-destaques-lista li::before {
+    content: "✓";
+    color: var(--cor-sucesso);
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+/* --- Estado Vazio para Busca --- */
+.novidades-empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    background: var(--cor-container);
+    border: 1px dashed var(--cor-borda);
+    border-radius: var(--radius-card);
+    color: #64748b;
+}
+
+.novidades-empty-state i {
+    font-size: 3rem;
+    color: #94a3b8;
+    margin-bottom: 12px;
+}
+
+.novidades-empty-state h3 {
+    color: var(--cor-texto);
+    margin: 0 0 6px 0;
+}
+
+/* Badge 'Novo' na aba do menu superior */
+.badge-novidades {
+    background: var(--cor-sucesso) !important;
+    font-size: 10px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.5px;
+    padding: 2px 7px !important;
+    text-transform: uppercase;
+}

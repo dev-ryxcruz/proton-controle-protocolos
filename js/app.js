@@ -12,6 +12,7 @@ import { setupGlobalKeyboardShortcuts } from "./components/shortcuts.js";
 import { setupEasterEgg } from "./modules/easterEgg.js";
 import { protocoloApp } from "./modules/protocolo/index.js";
 import { contadorApp } from "./modules/contador/index.js";
+import { novidadesApp } from "./modules/novidades/index.js";
 
 const setupTabs = () => {
   const tabLinks = document.querySelectorAll(".tab-link");
@@ -39,9 +40,12 @@ const setupTabs = () => {
       if (tabId === "tab-proton") {
         if (protonShortcuts) protonShortcuts.style.display = "block";
         if (contadorShortcuts) contadorShortcuts.style.display = "none";
-      } else {
+      } else if (tabId === "tab-contador") {
         if (protonShortcuts) protonShortcuts.style.display = "none";
         if (contadorShortcuts) contadorShortcuts.style.display = "block";
+      } else {
+        if (protonShortcuts) protonShortcuts.style.display = "none";
+        if (contadorShortcuts) contadorShortcuts.style.display = "none";
       }
     });
   });
@@ -63,6 +67,7 @@ export const initializeApp = () => {
   // 4. Inicializa os módulos de negócio
   const protonInstance = protocoloApp();
   const contadorInstance = contadorApp();
+  const novidadesInstance = novidadesApp();
 
   // 5. Atalhos, Command Palette (Ctrl+K) e UX
   setupGlobalKeyboardShortcuts();
@@ -79,9 +84,10 @@ export const initializeApp = () => {
   window.proton = {
     protocolo: protonInstance,
     contador: contadorInstance,
+    novidades: novidadesInstance,
   };
 
-  return { protonInstance, contadorInstance };
+  return { protonInstance, contadorInstance, novidadesInstance };
 };
 
 // Auto-inicialização quando o DOM estiver pronto

@@ -24,5 +24,8 @@ export const STORAGE_KEYS = {
   // Contador Manual
   contadorAmbulatorio: "contador_ambulatorio_v1",
   contadorInternacao: "contador_internacao_v1",
+
+  // Novidades e Melhorias
+  customNovidades: "proton_custom_novidades_v1",
 };
 

@@ -100,6 +100,11 @@
                 <i class="fas fa-calculator" aria-hidden="true"></i> Contador de Digitalização
                 <span class="tab-indicator"></span>
             </button>
+            <button class="tab-link" data-tab="tab-novidades" role="tab" aria-selected="false" aria-controls="tab-novidades" id="tab-btn-novidades">
+                <i class="fas fa-bullhorn" aria-hidden="true"></i> Novidades
+                <span class="tab-badge badge-novidades" id="tabBadgeNovidades" aria-label="Aba de novidades">Novo</span>
+                <span class="tab-indicator"></span>
+            </button>
         </nav>
 
         <!-- Proton tab content -->
@@ -465,6 +470,61 @@
                         <i class="fas fa-undo" aria-hidden="true"></i> Zerar Contagem
                     </button>
                 </div>
+            </section>
+        </main>
+
+        <!-- Novidades tab content -->
+        <main id="tab-novidades" class="tab-content" role="tabpanel" aria-labelledby="tab-btn-novidades">
+            <section class="setup-section novidades-hero" data-animate>
+                <div class="novidades-hero-content">
+                    <div class="novidades-hero-title-area">
+                        <div class="section-title" style="margin-bottom: 6px;">
+                            <i class="fas fa-bullhorn" aria-hidden="true"></i> Central de Novidades & Melhorias
+                        </div>
+                        <p class="novidades-subtitle">
+                            Acompanhe todas as atualizações do PROTON com transparência, detalhando a <strong>data</strong>, o <strong>motivo</strong> e o <strong>objetivo</strong> de cada melhoria implementada.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Métricas do módulo de novidades -->
+                <div class="novidades-stats-grid">
+                    <div class="novidade-stat-pill">
+                        <i class="fas fa-layer-group" aria-hidden="true"></i>
+                        <span>Melhorias Registradas: <strong id="statTotalMelhorias">0</strong></span>
+                    </div>
+                    <div class="novidade-stat-pill">
+                        <i class="fas fa-code-branch" aria-hidden="true"></i>
+                        <span>Versão Atual: <strong>v1.5</strong></span>
+                    </div>
+                    <div class="novidade-stat-pill">
+                        <i class="fas fa-check-double" aria-hidden="true"></i>
+                        <span>Ambiente: <strong>Produção Ativa</strong></span>
+                    </div>
+                </div>
+
+                <!-- Barra de pesquisa e filtros por categoria -->
+                <div class="novidades-filters-bar">
+                    <div class="novidades-search-box">
+                        <i class="fas fa-search" aria-hidden="true"></i>
+                        <input type="text" id="buscaNovidades" placeholder="Buscar melhorias por palavra-chave, motivo ou objetivo..." aria-label="Buscar melhorias">
+                        <button type="button" id="btnLimparBuscaNovidades" class="clear-search-btn" title="Limpar busca" aria-label="Limpar campo de busca" style="display: none;">
+                            <i class="fas fa-times" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <div class="novidades-category-chips" id="novidadesCategoryChips">
+                        <button type="button" class="category-chip active" data-category="todos">Todas</button>
+                        <button type="button" class="category-chip" data-category="Produtividade">Produtividade</button>
+                        <button type="button" class="category-chip" data-category="Interface">Interface & UX</button>
+                        <button type="button" class="category-chip" data-category="Automação">Automação</button>
+                        <button type="button" class="category-chip" data-category="Arquitetura">Arquitetura</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Linha do tempo dinâmica de novidades -->
+            <section class="novidades-timeline-container" id="novidadesContainer" aria-label="Lista de melhorias do sistema">
+                <!-- Conteúdo renderizado dinamicamente via JS -->
             </section>
         </main>
     </div>

@@ -34,6 +34,13 @@ Uma ferramenta simples e ágil para contagem manual de documentos durante o proc
 * **Exportação para PDF:** Gere um relatório em PDF com design profissional, incluindo o logo, as contagens e o gráfico, com um único clique.
 * **Persistência de Dados:** A contagem também é salva no `localStorage`, para que você possa continuar de onde parou.
 
+### 3. Aba: Novidades & Registro de Melhorias
+Canal transparente com a linha do tempo de todas as evoluções do sistema, permitindo que a equipe acompanhe a evolução do software.
+
+* **Estrutura Padronizada:** Cada melhoria detalha com clareza a **Data**, o **Motivo** (problema/necessidade que gerou a mudança) e o **Objetivo** (impacto positivo e metas operacionais).
+* **Filtros e Busca em Tempo Real:** Pesquisa rápida por palavras-chave e chips de filtragem por categoria (Produtividade, Interface & UX, Automação, Arquitetura) com alto contraste para tema claro e escuro.
+* **Badge Dinâmico e Command Palette:** Acesso direto através de atalhos e comando integrado no menu `Ctrl + K`.
+
 ---
 
 ## ✨ Recursos Adicionais
@@ -75,6 +82,7 @@ proton-controle-protocolos/
 │       ├── palette.css          # Command Palette (Ctrl + K)
 │       ├── timer.css            # Cronômetro de produtividade e atalhos
 │       ├── contador.css         # Cards e layout do contador manual
+│       ├── novidades.css        # Timeline, cards e filtros da aba de novidades
 │       ├── ux.css               # Efeito ripple e botão scroll-to-top
 │       └── easteregg.css        # Matrix Mode (Konami Code)
 │
@@ -109,6 +117,8 @@ proton-controle-protocolos/
         │   └── report.js        # Relatório diário de produtividade e timeline
         ├── contador/            # Módulo de Contagem de Digitalização
         │   └── index.js         # Lógica do contador manual e atalhos
+        ├── novidades/           # Módulo de Novidades e Registro de Melhorias
+        │   └── index.js         # Linha do tempo, filtros, motivos, objetivos e modal
         └── easterEgg.js         # Konami Code (Matrix Mode)
 ```
 
