@@ -117,8 +117,10 @@
                             </label>
                             <input type="text" id="conferente" placeholder="Digite seu nome" autocomplete="name" required>
                         </div>
-                        <button type="button" id="btnFixarConferente" class="btn-secondary">Fixar Nome</button>
-                        <button type="button" id="btnTrocarConferente" class="btn-secondary" style="display: none;">Trocar</button>
+                        <button type="button" id="btnPinConferente" class="btn-pin" title="Travar/Destravar Nome do Conferente" aria-pressed="false">
+                            <i class="fas fa-unlock" aria-hidden="true"></i>
+                            <span class="pin-text">Travar</span>
+                        </button>
                     </div>
                     <div class="input-group">
                         <div class="form-group">
@@ -134,15 +136,23 @@
                                 <option value="Internação">Internação</option>
                             </select>
                         </div>
-                        <button type="button" id="btnFixarConvenio" class="btn-secondary">Fixar</button>
-                        <button type="button" id="btnTrocarConvenio" class="btn-secondary" style="display: none;">Trocar</button>
+                        <button type="button" id="btnPinConvenio" class="btn-pin" title="Travar/Destravar Convênio" aria-pressed="false">
+                            <i class="fas fa-unlock" aria-hidden="true"></i>
+                            <span class="pin-text">Travar</span>
+                        </button>
                     </div>
                 </div>
-                <div class="form-group full-width">
-                    <label for="dataRecebimento">
-                        <i class="fas fa-calendar" aria-hidden="true"></i> Data de Referência dos Protocolos
-                    </label>
-                    <input type="date" id="dataRecebimento" required>
+                <div class="input-group full-width-group" style="margin-top: 15px;">
+                    <div class="form-group full-width">
+                        <label for="dataRecebimento">
+                            <i class="fas fa-calendar" aria-hidden="true"></i> Data de Referência dos Protocolos
+                        </label>
+                        <input type="date" id="dataRecebimento" required>
+                    </div>
+                    <button type="button" id="btnPinData" class="btn-pin" title="Travar/Destravar Data de Referência" aria-pressed="false">
+                        <i class="fas fa-unlock" aria-hidden="true"></i>
+                        <span class="pin-text">Travar</span>
+                    </button>
                 </div>
             </section>
 
@@ -299,11 +309,18 @@
                 <button type="button" id="gerarExcel" class="btn-success">
                     <i class="fas fa-file-excel" aria-hidden="true"></i> Gerar Planilha Excel
                 </button>
+                <button type="button" id="btnImportarExcel" class="btn-outline-excel" title="Importar planilha Excel gerada pelo Proton">
+                    <i class="fas fa-file-import" aria-hidden="true"></i> Importar Excel
+                </button>
+                <input type="file" id="fileImportExcel" accept=".xlsx" style="display: none;" aria-label="Importar planilha Excel">
                 <button type="button" id="btnBackup" class="btn-info">
                     <i class="fas fa-download" aria-hidden="true"></i> Backup Dados
                 </button>
                 <button type="button" id="btnRestore" class="btn-warning">
                     <i class="fas fa-upload" aria-hidden="true"></i> Restaurar Dados
+                </button>
+                <button type="button" id="btnNovoTurno" class="btn-novo-turno" title="Limpar sessão atual e iniciar novo turno">
+                    <i class="fas fa-rotate" aria-hidden="true"></i> Limpar Sessão / Novo Turno
                 </button>
                 <button type="button" id="btnLimpar" class="btn-danger">
                     <i class="fas fa-trash" aria-hidden="true"></i> Limpar Todos os Dados
@@ -377,6 +394,26 @@
                 <button type="button" id="btnBulkConference" class="btn-success">
                     <i class="fas fa-check-double" aria-hidden="true"></i> Conferir Selecionados
                 </button>
+            </div>
+
+            <!-- Print receipt section (Visible only on @media print) -->
+            <div id="printFooterSignature" class="print-footer-signature" aria-hidden="true">
+                <div class="print-meta-info">
+                    <div><strong>Data de Emissão:</strong> <span id="printDataEmissao">--/--/----</span></div>
+                    <div><strong>Conferente:</strong> <span id="printConferente">Não informado</span></div>
+                    <div><strong>Convênio / Ref:</strong> <span id="printConvenioRef">Geral</span></div>
+                    <div><strong>Total de Protocolos:</strong> <span id="printTotalProtocolos">0</span></div>
+                </div>
+                <div class="print-signature-boxes">
+                    <div class="signature-box">
+                        <div class="signature-line"></div>
+                        <p>Data e Assinatura do Conferente</p>
+                    </div>
+                    <div class="signature-box">
+                        <div class="signature-line"></div>
+                        <p>Data e Assinatura de Recebimento</p>
+                    </div>
+                </div>
             </div>
 
             <!-- History section -->

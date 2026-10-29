@@ -48,7 +48,7 @@
     },
   };
 
-  // Gerenciador de Símbolos
+  // Gerenciador de Símbolos (Criação Segura de Nós DOM - Prevenção de XSS)
   const SymbolManager = {
     generateIndicators: (item) => {
       const { quantidades = {}, observacoes = "" } = item;
@@ -82,6 +82,51 @@
                     </div>
                 </div>
             `;
+    },
+    // Criação segura de nós DOM para célula de protocolo com símbolos indicadores (Prevenção XSS)
+    createProtocolCellElement: (item) => {
+      const cell = document.createElement("div");
+      cell.className = "protocol-cell";
+
+      const numSpan = document.createElement("span");
+      numSpan.className = "protocol-number";
+      numSpan.textContent = item.protocolo;
+      cell.appendChild(numSpan);
+
+      const indicatorsDiv = document.createElement("div");
+      indicatorsDiv.className = "protocol-indicators";
+
+      const { quantidades = {}, observacoes = "" } = item;
+      const indicatorMap = {
+        Ambulatorio: { class: "amb", letter: "A", label: "Ambulatório" },
+        CDI: { class: "cdi", letter: "C", label: "CDI" },
+        UE: { class: "ue", letter: "U", label: "UE" },
+        Internacao: { class: "int", letter: "I", label: "Internação" },
+      };
+
+      Object.entries(indicatorMap)
+        .filter(([key]) => quantidades[key] > 0)
+        .forEach(([key, { class: c, letter, label }]) => {
+          const div = document.createElement("div");
+          div.className = `indicator-symbol indicator-${c}`;
+          const count = quantidades[key];
+          div.setAttribute("data-tooltip", `${label}: ${count} docs`);
+          div.title = `${label}: ${count} documentos`;
+          div.textContent = letter;
+          indicatorsDiv.appendChild(div);
+        });
+
+      if (observacoes && observacoes.trim()) {
+        const div = document.createElement("div");
+        div.className = "indicator-symbol indicator-obs";
+        div.setAttribute("data-tooltip", "Possui observações");
+        div.title = "Protocolo possui observações: " + observacoes;
+        div.textContent = "📝";
+        indicatorsDiv.appendChild(div);
+      }
+
+      cell.appendChild(indicatorsDiv);
+      return cell;
     },
   };
 
@@ -250,6 +295,9 @@
             { id: 'search', icon: 'fa-search', name: 'Buscar Protocolos', action: () => { document.querySelector('[data-tab="tab-proton"]').click(); setTimeout(() => document.getElementById('searchInput').focus(), 100); } },
             { id: 'lote', icon: 'fa-layer-group', name: 'Adicionar Protocolos em Lote', action: () => { document.querySelector('[data-tab="tab-proton"]').click(); document.getElementById('btnAbrirModalLote').click(); } },
             { id: 'excel', icon: 'fa-file-excel', name: 'Exportar Planilha Excel', action: () => document.getElementById('gerarExcel').click() },
+            { id: 'import-excel', icon: 'fa-file-import', name: 'Importar Planilha Excel (.xlsx)', action: () => document.getElementById('btnImportarExcel')?.click() },
+            { id: 'novo-turno', icon: 'fa-rotate', name: 'Limpar Sessão / Novo Turno', action: () => document.getElementById('btnNovoTurno')?.click() },
+            { id: 'print-guide', icon: 'fa-print', name: 'Imprimir Guia Física (Ctrl + P)', action: () => window.print() },
             { id: 'pdf', icon: 'fa-file-pdf', name: 'Gerar Relatório PDF (Contador)', action: () => { document.querySelector('[data-tab="tab-contador"]').click(); setTimeout(() => document.getElementById('pdf-btn').click(), 100); } },
             { id: 'tab-proton', icon: 'fa-file-alt', name: 'Ir para Aba: Controle de Protocolos', action: () => document.querySelector('[data-tab="tab-proton"]').click() },
             { id: 'tab-contador', icon: 'fa-calculator', name: 'Ir para Aba: Contador Manual', action: () => document.querySelector('[data-tab="tab-contador"]').click() },
@@ -449,15 +497,25 @@
       protocoloFeedback: document.getElementById("protocoloFeedback"),
       btnAdicionar: document.getElementById("btnAdicionar"),
       btnLimpar: document.getElementById("btnLimpar"),
+      btnNovoTurno: document.getElementById("btnNovoTurno"),
       tabelaCorpo: document.getElementById("tabelaCorpo"),
       mensagemVazia: document.getElementById("mensagemVazia"),
       conferente: document.getElementById("conferente"),
+      btnPinConferente: document.getElementById("btnPinConferente"),
+      btnPinConvenio: document.getElementById("btnPinConvenio"),
+      btnPinData: document.getElementById("btnPinData"),
       btnFixarConferente: document.getElementById("btnFixarConferente"),
       btnTrocarConferente: document.getElementById("btnTrocarConferente"),
       convenio: document.getElementById("convenio"),
       btnFixarConvenio: document.getElementById("btnFixarConvenio"),
       btnTrocarConvenio: document.getElementById("btnTrocarConvenio"),
       btnGerarExcel: document.getElementById("gerarExcel"),
+      btnImportarExcel: document.getElementById("btnImportarExcel"),
+      fileImportExcel: document.getElementById("fileImportExcel"),
+      printDataEmissao: document.getElementById("printDataEmissao"),
+      printConferente: document.getElementById("printConferente"),
+      printConvenioRef: document.getElementById("printConvenioRef"),
+      printTotalProtocolos: document.getElementById("printTotalProtocolos"),
       statTotal: document.getElementById("stat-total"),
       statProcessados: document.getElementById("stat-processados"),
       statPendentes: document.getElementById("stat-pendentes"),
@@ -494,16 +552,38 @@
 
     const STORAGE_KEYS = {
       database: "documentosDB_pro_v1",
+      session: "proton_session_protocols",
       activities: "atividades_pro_v1",
       timerSeconds: "timer_seconds",
       timerRunning: "timer_was_running",
+      fieldPins: "proton_field_pins_v1",
+      pinnedValues: "proton_pinned_values_v1",
       fixedConferente: "conferenteFixo_pro_v1",
       fixedConvenio: "convenioFixo_pro_v1",
     };
 
+    // Flag de prevenção de perda de dados acidental (beforeunload)
+    let hasUnsavedChanges = false;
+
+    // Recupera protocolos com espelhamento em sessionStorage (F5 seguro) com fallback para localStorage
+    let savedProtocols = [];
+    try {
+      const sessionData = sessionStorage.getItem(STORAGE_KEYS.session);
+      if (sessionData) {
+        savedProtocols = JSON.parse(sessionData) || [];
+      } else {
+        const localData = localStorage.getItem(STORAGE_KEYS.database);
+        if (localData) {
+          savedProtocols = JSON.parse(localData) || [];
+        }
+      }
+    } catch (e) {
+      console.warn("Erro ao carregar protocolos salvos:", e);
+      savedProtocols = [];
+    }
+
     let state = {
-      baseDeDados:
-        JSON.parse(localStorage.getItem(STORAGE_KEYS.database)) || [],
+      baseDeDados: savedProtocols,
       dadosFiltrados: [],
       atividades:
         JSON.parse(localStorage.getItem(STORAGE_KEYS.activities)) || [],
@@ -515,6 +595,12 @@
       sortColumn: null,
       sortDirection: "asc",
       selectedItems: [],
+      editingProtocol: null, // Guarda o número do protocolo em edição inline
+      pins: JSON.parse(localStorage.getItem(STORAGE_KEYS.fieldPins)) || {
+        conferente: false,
+        convenio: false,
+        data: false,
+      },
     };
 
     state.dadosFiltrados = [...state.baseDeDados];
@@ -525,20 +611,26 @@
       return `${dia}/${mes}/${ano}`;
     };
 
+    // Sincronização e espelhamento em sessionStorage e localStorage
     const salvarDados = () => {
       try {
+        // Espelhamento na sessão (para recarregamentos acidentais F5)
+        sessionStorage.setItem(
+          STORAGE_KEYS.session,
+          JSON.stringify(state.baseDeDados)
+        );
+        // Persistência local permanente
         localStorage.setItem(
           STORAGE_KEYS.database,
-          JSON.stringify(state.baseDeDados),
+          JSON.stringify(state.baseDeDados)
         );
         localStorage.setItem(
           STORAGE_KEYS.activities,
-          JSON.stringify(state.atividades),
+          JSON.stringify(state.atividades)
         );
       } catch (error) {
         console.error("Erro ao salvar dados:", error);
-        // QuotaExceededError = localStorage cheio
-        if (error.name === 'QuotaExceededError') {
+        if (error.name === "QuotaExceededError") {
           showToast("error", "Limite Excedido", "Espaço de armazenamento local cheio.");
         } else {
           showToast("error", "Erro", "Falha ao salvar dados localmente.");
@@ -612,8 +704,8 @@
       }, 300);
     };
 
-    // === MELHORIA: Toast de Desfazer (Undo) ===
-    const showUndoToast = (message, onUndo) => {
+    // === MELHORIA: Toast de Desfazer (Undo) - 5 segundos de duração ===
+    const showUndoToast = (message, onUndo, duration = 5000) => {
       const toastContainer = document.getElementById("toastContainer");
       const toast = document.createElement("div");
       toast.className = "toast toast-undo";
@@ -638,7 +730,7 @@
 
       let autoRemoveTimer = setTimeout(() => {
         if (!isUndone && toast.parentNode) removeToast(toast);
-      }, 6000);
+      }, duration);
 
       btnUndo.addEventListener("click", () => {
         isUndone = true;
@@ -838,9 +930,13 @@
       // Atualiza o badge na tab
       const pendentesTotal = state.baseDeDados.filter(item => item.status === 'Pendente').length;
       updatePendingBadge(pendentesTotal);
+    };
 
+    // Atualiza opções do dropdown de convênios dinamicamente
+    const atualizarFiltroConvenio = () => {
+      if (!elements.filterConvenio) return;
       const convenios = [
-        ...new Set(state.baseDeDados.map((item) => item.convenio)),
+        ...new Set(state.baseDeDados.map((item) => item.convenio).filter(Boolean)),
       ];
       const currentValue = elements.filterConvenio.value;
 
@@ -854,7 +950,22 @@
       });
 
       elements.filterConvenio.value = currentValue;
-      atualizarGrafico();
+    };
+
+    // Atualiza metadados na área de guia física de impressão (@media print)
+    const atualizarDadosImpressao = () => {
+      if (elements.printDataEmissao) {
+        elements.printDataEmissao.textContent = new Date().toLocaleDateString("pt-BR");
+      }
+      if (elements.printConferente) {
+        elements.printConferente.textContent = elements.conferente?.value || "Não informado";
+      }
+      if (elements.printConvenioRef) {
+        elements.printConvenioRef.textContent = elements.convenio?.value || "Geral";
+      }
+      if (elements.printTotalProtocolos) {
+        elements.printTotalProtocolos.textContent = String(state.baseDeDados.length);
+      }
     };
 
     // === MELHORIA: Cores dinâmicas para o Chart ===
@@ -870,7 +981,10 @@
       };
     };
 
+    // Gestão de Gráficos: Atualização eficiente via chart.update() sem destruir instâncias do zero
     const atualizarGrafico = () => {
+      if (!elements.chartCanvas) return;
+
       const contagemTipos = { Ambulatorio: 0, CDI: 0, UE: 0, Internacao: 0 };
 
       state.dadosFiltrados
@@ -893,28 +1007,33 @@
       const themeColors = getChartColors();
       const colors = labels.map((label) => themeColors[label]);
 
-      if (state.tipoDocumentoChart) {
-        try {
-          state.tipoDocumentoChart.destroy();
-        } catch (e) {
-          console.warn("Aviso ao destruir gráfico anterior:", e);
+      const formattedLabels = labels.map((l) => {
+        switch (l) {
+          case "Ambulatorio":
+            return "Ambulatório";
+          case "Internacao":
+            return "Internação";
+          default:
+            return l;
         }
-      }
+      });
 
-      if (data.length > 0) {
+      // Se o gráfico já existe, atualiza datasets e invoca chart.update()
+      if (state.tipoDocumentoChart) {
+        state.tipoDocumentoChart.data.labels = formattedLabels;
+        state.tipoDocumentoChart.data.datasets[0].data = data;
+        state.tipoDocumentoChart.data.datasets[0].backgroundColor = colors;
+        state.tipoDocumentoChart.data.datasets[0].borderColor = themeColors.Borda;
+        if (state.tipoDocumentoChart.options.plugins?.legend?.labels) {
+          state.tipoDocumentoChart.options.plugins.legend.labels.color = themeColors.Texto;
+        }
+        state.tipoDocumentoChart.update();
+      } else if (data.length > 0) {
+        // Inicializa nova instância do gráfico caso não exista
         state.tipoDocumentoChart = new Chart(elements.chartCanvas, {
           type: "doughnut",
           data: {
-            labels: labels.map((l) => {
-              switch (l) {
-                case "Ambulatorio":
-                  return "Ambulatório";
-                case "Internacao":
-                  return "Internação";
-                default:
-                  return l;
-              }
-            }),
+            labels: formattedLabels,
             datasets: [
               {
                 data: data,
@@ -943,86 +1062,234 @@
       }
     };
 
+    // Renderização Segura da Tabela (Prevenção de XSS e Suporte a Edição Inline)
     const renderizarTabela = () => {
       if (!elements.tabelaCorpo) return;
 
-      elements.tabelaCorpo.innerHTML = "";
+      // Limpeza segura sem innerHTML
+      elements.tabelaCorpo.textContent = "";
 
       if (elements.mensagemVazia) {
         elements.mensagemVazia.style.display =
           state.dadosFiltrados.length === 0 ? "block" : "none";
       }
 
-      state.dadosFiltrados.forEach((item, index) => {
+      const convenioColor = {
+        Unimed: "#3b82f6",
+        Intercâmbio: "#ef4444",
+        "Convênio Externo": "#f59e0b",
+        Particular: "#10b981",
+        Internação: "#8b5cf6",
+      };
+
+      state.dadosFiltrados.forEach((item) => {
         const tr = document.createElement("tr");
         tr.dataset.protocolo = item.protocolo;
         const isSelected = state.selectedItems.includes(item.protocolo);
         if (isSelected) tr.classList.add("selected");
         if (item.status === "Baixado") tr.classList.add("status-baixado");
 
-        const convenioColor = {
-          Unimed: "#3b82f6",
-          Intercâmbio: "#ef4444",
-          "Convênio Externo": "#f59e0b",
-          Particular: "#10b981",
-          Internação: "#8b5cf6",
-        };
+        // --- MODO: EDIÇÃO INLINE DO PROTOCOLO ---
+        if (state.editingProtocol === item.protocolo) {
+          tr.classList.add("row-editing");
 
-        const convenioSafe = SecurityUtils.escapeHTML(item.convenio);
-        const statusSafe = SecurityUtils.escapeHTML(item.status);
-        const protocolCell = SymbolManager.createProtocolCell(item);
+          // 1. Checkbox / Indicador de edição ativa
+          const tdCheck = document.createElement("td");
+          tdCheck.className = "checkbox-cell";
+          tdCheck.setAttribute("data-label", "Modo");
+          const editIcon = document.createElement("i");
+          editIcon.className = "fas fa-edit text-warning";
+          editIcon.title = "Em edição inline";
+          tdCheck.appendChild(editIcon);
+          tr.appendChild(tdCheck);
 
-        // === MELHORIA: Atributo data-label para os cards de Mobile ===
-        tr.innerHTML = `
-                    <td class="checkbox-cell" data-label="Selecionar">
-                        <input type="checkbox" class="row-checkbox" data-protocolo="${item.protocolo}" ${isSelected ? "checked" : ""} aria-label="Selecionar protocolo ${item.protocolo}">
-                    </td>
-                    <td data-label="Protocolo">${protocolCell}</td>
-                    <td data-label="Convênio">
-                        <span style="background: ${convenioColor[item.convenio] || "#64748b"}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">
-                            ${convenioSafe}
-                        </span>
-                    </td>
-                    <td class="status-display" data-label="Status">
-                        <i class="fas ${item.status === "Baixado" ? "fa-check-circle" : "fa-clock"}" aria-hidden="true"></i> 
-                        ${statusSafe}
-                    </td>
-                   <td data-label="Data Referência">${formatarDataBR(item.dataRecebimento)}</td>
-<td data-label="Ações">
-    <div class="action-buttons"></div>
-</td>
-                `;
+          // 2. Campo de digitação rápida do número do protocolo
+          const tdProto = document.createElement("td");
+          tdProto.setAttribute("data-label", "Protocolo");
+          const inputProto = document.createElement("input");
+          inputProto.type = "text";
+          inputProto.className = "table-inline-input edit-proto-input";
+          inputProto.value = item.protocolo;
+          inputProto.maxLength = 6;
+          inputProto.inputMode = "numeric";
+          inputProto.dataset.protocolo = item.protocolo;
+          inputProto.setAttribute("aria-label", "Editar número do protocolo");
+          tdProto.appendChild(inputProto);
+          tr.appendChild(tdProto);
 
-        const acaoCell = tr.querySelector(".action-buttons");
-        const itemIndex = state.baseDeDados.indexOf(item);
+          // 3. Dropdown do Convênio
+          const tdConv = document.createElement("td");
+          tdConv.setAttribute("data-label", "Convênio");
+          const selectConv = document.createElement("select");
+          selectConv.className = "table-inline-select edit-conv-select";
+          selectConv.dataset.protocolo = item.protocolo;
+          const convList = ["Unimed", "Intercâmbio", "Convênio Externo", "Particular", "Internação"];
+          if (item.convenio && !convList.includes(item.convenio)) convList.push(item.convenio);
+          convList.forEach((c) => {
+            const opt = document.createElement("option");
+            opt.value = c;
+            opt.textContent = c;
+            if (c === item.convenio) opt.selected = true;
+            selectConv.appendChild(opt);
+          });
+          tdConv.appendChild(selectConv);
+          tr.appendChild(tdConv);
 
-        const createButton = (action, icon, btnClass, title) =>
-          `<button type="button" class="${btnClass}" data-action="${action}" data-index="${itemIndex}" title="${title}" aria-label="${title} protocolo ${item.protocolo}">
-                        <i class="fas ${icon}" aria-hidden="true"></i>
-                    </button>`;
+          // 4. Status
+          const tdStatus = document.createElement("td");
+          tdStatus.className = "status-display";
+          tdStatus.setAttribute("data-label", "Status");
+          const sIcon = document.createElement("i");
+          sIcon.className = item.status === "Baixado" ? "fas fa-check-circle" : "fas fa-clock";
+          tdStatus.appendChild(sIcon);
+          tdStatus.appendChild(document.createTextNode(" " + item.status));
+          tr.appendChild(tdStatus);
 
-        if (item.status === "Baixado") {
-          acaoCell.innerHTML = `
-                        ${createButton("edit", "fa-edit", "btn-warning", "Editar")}
-                        ${createButton("delete", "fa-trash", "btn-danger", "Remover")}
-                    `;
-        } else {
-          acaoCell.innerHTML = `
-                        ${createButton("conference", "fa-check", "btn-success", "Conferir")}
-                        ${createButton("edit", "fa-edit", "btn-warning", "Editar")}
-                        ${createButton("delete", "fa-trash", "btn-danger", "Remover")}
-                    `;
+          // 5. Data Referência
+          const tdDate = document.createElement("td");
+          tdDate.setAttribute("data-label", "Data Referência");
+          const inputDate = document.createElement("input");
+          inputDate.type = "date";
+          inputDate.className = "table-inline-input edit-date-input";
+          inputDate.value = item.dataRecebimento || "";
+          inputDate.dataset.protocolo = item.protocolo;
+          tdDate.appendChild(inputDate);
+          tr.appendChild(tdDate);
+
+          // 6. Ações inline (Salvar / Cancelar)
+          const tdActions = document.createElement("td");
+          tdActions.setAttribute("data-label", "Ações");
+          const actionDiv = document.createElement("div");
+          actionDiv.className = "action-buttons";
+
+          const btnSave = document.createElement("button");
+          btnSave.type = "button";
+          btnSave.className = "btn-save-inline";
+          btnSave.dataset.action = "save-inline";
+          btnSave.dataset.protocolo = item.protocolo;
+          btnSave.title = "Salvar alterações (Enter)";
+          btnSave.innerHTML = '<i class="fas fa-check" aria-hidden="true"></i>';
+          actionDiv.appendChild(btnSave);
+
+          const btnCancel = document.createElement("button");
+          btnCancel.type = "button";
+          btnCancel.className = "btn-cancel-inline";
+          btnCancel.dataset.action = "cancel-inline";
+          btnCancel.dataset.protocolo = item.protocolo;
+          btnCancel.title = "Cancelar edição (Esc)";
+          btnCancel.innerHTML = '<i class="fas fa-times" aria-hidden="true"></i>';
+          actionDiv.appendChild(btnCancel);
+
+          if (item.status === "Baixado") {
+            const btnConf = document.createElement("button");
+            btnConf.type = "button";
+            btnConf.className = "btn-info";
+            btnConf.dataset.action = "edit-conferencia";
+            btnConf.dataset.protocolo = item.protocolo;
+            btnConf.title = "Ajustar quantidades e observações";
+            btnConf.innerHTML = '<i class="fas fa-sliders-h" aria-hidden="true"></i>';
+            actionDiv.appendChild(btnConf);
+          }
+
+          tdActions.appendChild(actionDiv);
+          tr.appendChild(tdActions);
+          elements.tabelaCorpo.appendChild(tr);
+
+          setTimeout(() => {
+            inputProto.focus();
+            inputProto.select();
+          }, 30);
+          return;
         }
 
+        // --- MODO: LINHA NORMAL (NÃO-EDIÇÃO) ---
+        // 1. Checkbox seguro
+        const tdCheck = document.createElement("td");
+        tdCheck.className = "checkbox-cell";
+        tdCheck.setAttribute("data-label", "Selecionar");
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.className = "row-checkbox";
+        checkbox.dataset.protocolo = item.protocolo;
+        checkbox.checked = isSelected;
+        checkbox.setAttribute("aria-label", `Selecionar protocolo ${item.protocolo}`);
+        tdCheck.appendChild(checkbox);
+        tr.appendChild(tdCheck);
+
+        // 2. Protocolo com símbolos indicadores (via DOM nodes seguros)
+        const tdProto = document.createElement("td");
+        tdProto.setAttribute("data-label", "Protocolo");
+        tdProto.appendChild(SymbolManager.createProtocolCellElement(item));
+        tr.appendChild(tdProto);
+
+        // 3. Convênio com badge
+        const tdConv = document.createElement("td");
+        tdConv.setAttribute("data-label", "Convênio");
+        const convBadge = document.createElement("span");
+        convBadge.className = "badge-convenio";
+        convBadge.style.backgroundColor = convenioColor[item.convenio] || "#64748b";
+        convBadge.textContent = item.convenio;
+        tdConv.appendChild(convBadge);
+        tr.appendChild(tdConv);
+
+        // 4. Status
+        const tdStatus = document.createElement("td");
+        tdStatus.className = "status-display";
+        tdStatus.setAttribute("data-label", "Status");
+        const statusIcon = document.createElement("i");
+        statusIcon.className = item.status === "Baixado" ? "fas fa-check-circle" : "fas fa-clock";
+        tdStatus.appendChild(statusIcon);
+        tdStatus.appendChild(document.createTextNode(" " + item.status));
+        tr.appendChild(tdStatus);
+
+        // 5. Data Referência
+        const tdDate = document.createElement("td");
+        tdDate.setAttribute("data-label", "Data Referência");
+        tdDate.textContent = formatarDataBR(item.dataRecebimento);
+        tr.appendChild(tdDate);
+
+        // 6. Botões de Ação
+        const tdActions = document.createElement("td");
+        tdActions.setAttribute("data-label", "Ações");
+        const actionDiv = document.createElement("div");
+        actionDiv.className = "action-buttons";
+
+        const appendBtn = (action, icon, btnClass, title) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = btnClass;
+          btn.dataset.action = action;
+          btn.dataset.protocolo = item.protocolo;
+          btn.title = title;
+          btn.setAttribute("aria-label", `${title} protocolo ${item.protocolo}`);
+          const i = document.createElement("i");
+          i.className = `fas ${icon}`;
+          btn.appendChild(i);
+          actionDiv.appendChild(btn);
+        };
+
+        if (item.status !== "Baixado") {
+          appendBtn("conference", "fa-check", "btn-success", "Conferir");
+        }
+        appendBtn("edit-inline", "fa-edit", "btn-warning", "Editar dados");
+        if (item.status === "Baixado") {
+          appendBtn("edit-conferencia", "fa-sliders-h", "btn-info", "Editar quantidades/obs");
+        }
+        appendBtn("delete", "fa-trash", "btn-danger", "Remover");
+
+        tdActions.appendChild(actionDiv);
+        tr.appendChild(tdActions);
         elements.tabelaCorpo.appendChild(tr);
       });
 
       const selectAllCheckbox = document.getElementById("selectAllCheckbox");
-      selectAllCheckbox.checked =
-        state.dadosFiltrados.length > 0 &&
-        state.dadosFiltrados.every((item) =>
-          state.selectedItems.includes(item.protocolo),
-        );
+      if (selectAllCheckbox) {
+        selectAllCheckbox.checked =
+          state.dadosFiltrados.length > 0 &&
+          state.dadosFiltrados.every((item) =>
+            state.selectedItems.includes(item.protocolo),
+          );
+      }
     };
 
     const setupSorting = () => {
@@ -1069,8 +1336,8 @@
         }
 
         if (state.sortColumn === "protocolo") {
-          valueA = parseInt(valueA);
-          valueB = parseInt(valueB);
+          valueA = parseInt(valueA, 10);
+          valueB = parseInt(valueB, 10);
         }
 
         if (valueA < valueB) return state.sortDirection === "asc" ? -1 : 1;
@@ -1079,16 +1346,16 @@
       });
     };
 
-    const aplicarFiltros = PerformanceUtils.debounce(() => {
-      const searchTerm = elements.searchInput.value.toLowerCase().trim();
-      const statusFilter = elements.filterStatus.value;
-      const convenioFilter = elements.filterConvenio.value;
-      const dateFilter = elements.filterDate.value;
+    // Filtragem síncrona interna
+    const aplicarFiltrosInterno = () => {
+      const searchTerm = elements.searchInput ? elements.searchInput.value.toLowerCase().trim() : "";
+      const statusFilter = elements.filterStatus ? elements.filterStatus.value : "";
+      const convenioFilter = elements.filterConvenio ? elements.filterConvenio.value : "";
+      const dateFilter = elements.filterDate ? elements.filterDate.value : "";
 
-      elements.btnClearSearch.classList.toggle(
-        "visible",
-        searchTerm.length > 0,
-      );
+      if (elements.btnClearSearch) {
+        elements.btnClearSearch.classList.toggle("visible", searchTerm.length > 0);
+      }
 
       state.dadosFiltrados = state.baseDeDados.filter((item) => {
         const matchesSearch =
@@ -1098,19 +1365,42 @@
           item.status.toLowerCase().includes(searchTerm);
 
         const matchesStatus = !statusFilter || item.status === statusFilter;
-        const matchesConvenio =
-          !convenioFilter || item.convenio === convenioFilter;
+        const matchesConvenio = !convenioFilter || item.convenio === convenioFilter;
         const matchesDate = !dateFilter || item.dataRecebimento === dateFilter;
 
         return matchesSearch && matchesStatus && matchesConvenio && matchesDate;
       });
+    };
 
+    // Aplicação de filtros com atualização de interface
+    const aplicarFiltros = () => {
+      aplicarFiltrosInterno();
       if (state.sortColumn) sortData();
-
       renderizarTabela();
       atualizarDashboard();
       updateBulkActionsBar();
-    }, 300);
+    };
+
+    // Debounce de 300ms para manter a fluidez na digitação do campo de busca
+    const debouncedAplicarFiltros = PerformanceUtils.debounce(aplicarFiltros, 300);
+
+    // GESTÃO DE ESTADO CENTRALIZADA (syncApp)
+    // Sincroniza em cadeia: sessionStorage/localStorage, tabela, contadores e gráfico Chart.js
+    const syncApp = (options = { save: true }) => {
+      if (options.save) {
+        salvarDados();
+      }
+      aplicarFiltrosInterno();
+      if (state.sortColumn) {
+        sortData();
+      }
+      renderizarTabela();
+      atualizarDashboard();
+      atualizarGrafico();
+      atualizarFiltroConvenio();
+      atualizarDadosImpressao();
+      updateBulkActionsBar();
+    };
 
     window.protonActions = {
       conferirProtocolo: (index) => {
@@ -1191,8 +1481,8 @@
         item.conferente = elements.conferente ? elements.conferente.value : "";
         item.dataConferencia = new Date().toISOString();
 
-        salvarDados();
-        aplicarFiltros();
+        hasUnsavedChanges = true;
+        syncApp();
 
         if (elements.modalConferencia) {
           elements.modalConferencia.style.display = "none";
@@ -1391,8 +1681,8 @@
           : item.conferente;
         item.dataConferencia = new Date().toISOString();
 
-        salvarDados();
-        aplicarFiltros();
+        hasUnsavedChanges = true;
+        syncApp();
         closeModal(elements.modalConferencia);
 
         showToast(
@@ -1495,8 +1785,8 @@
             const protocoloAntigo = item.protocolo;
             item.protocolo = novoProtocolo;
 
-            salvarDados();
-            aplicarFiltros();
+            hasUnsavedChanges = true;
+            syncApp();
 
             showToast(
               "success",
@@ -1512,29 +1802,97 @@
         };
       },
 
-      // === MELHORIA: Remover Protocolo agora suporta o UNDO (Desfazer) ===
-      removerProtocolo: (index) => {
+      // === MELHORIA: Remover Protocolo com Toast de Desfazer de 5s (sem confirm nativo bloqueante) ===
+      removerProtocolo: (indexOrProto) => {
+        let index = -1;
+        if (typeof indexOrProto === "number") {
+          index = indexOrProto;
+        } else {
+          index = state.baseDeDados.findIndex((p) => p.protocolo === indexOrProto);
+        }
         const item = state.baseDeDados[index];
         if (!item) return;
 
         const itemRemovido = { ...item };
         const indexOriginal = index;
 
+        // Exclui imediatamente sem confirm nativo
         state.baseDeDados.splice(index, 1);
-        salvarDados();
-        aplicarFiltros();
+        const selIdx = state.selectedItems.indexOf(item.protocolo);
+        if (selIdx !== -1) state.selectedItems.splice(selIdx, 1);
 
+        hasUnsavedChanges = state.baseDeDados.length > 0;
+        syncApp();
+
+        addActivity("delete", `Protocolo ${item.protocolo} removido`);
+
+        // Toast de 5 segundos com opção "Desfazer"
         showUndoToast(`Protocolo ${item.protocolo} removido.`, () => {
           state.baseDeDados.splice(indexOriginal, 0, itemRemovido);
-          salvarDados();
-          aplicarFiltros();
+          hasUnsavedChanges = true;
+          syncApp();
           showToast(
             "success",
             "Restaurado",
-            `Protocolo ${item.protocolo} recuperado.`,
+            `Protocolo ${item.protocolo} recuperado com sucesso.`,
           );
-        });
+          addActivity("restore", `Protocolo ${item.protocolo} restaurado via desfazer`);
+        }, 5000);
       },
+    };
+
+    // Edição inline direta na tabela com validação rápida e foco
+    const salvarEdicaoInline = (protocoloOriginal) => {
+      const row = elements.tabelaCorpo?.querySelector(`tr[data-protocolo="${protocoloOriginal}"]`);
+      if (!row) return;
+
+      const inputProto = row.querySelector(".edit-proto-input");
+      const selectConv = row.querySelector(".edit-conv-select");
+      const inputDate = row.querySelector(".edit-date-input");
+
+      const novoProtocolo = inputProto ? inputProto.value.trim() : protocoloOriginal;
+      const novoConvenio = selectConv ? selectConv.value : "";
+      const novaData = inputDate ? inputDate.value : "";
+
+      if (!novoProtocolo) {
+        showToast("error", "Validação", "Número do protocolo não pode estar vazio.");
+        inputProto?.focus();
+        return;
+      }
+      if (!SecurityUtils.validateNumeric(novoProtocolo)) {
+        showToast("error", "Validação", "O protocolo deve conter apenas números.");
+        inputProto?.focus();
+        return;
+      }
+      if (novoProtocolo.length !== 6) {
+        showToast("error", "Validação", "O protocolo deve ter exatamente 6 dígitos.");
+        inputProto?.focus();
+        return;
+      }
+      if (novoProtocolo !== protocoloOriginal && state.baseDeDados.some((p) => p.protocolo === novoProtocolo)) {
+        showToast("error", "Validação", "Já existe outro protocolo com este número.");
+        inputProto?.focus();
+        return;
+      }
+
+      const item = state.baseDeDados.find((p) => p.protocolo === protocoloOriginal);
+      if (item) {
+        item.protocolo = novoProtocolo;
+        if (novoConvenio) item.convenio = novoConvenio;
+        if (novaData) item.dataRecebimento = novaData;
+
+        const selIdx = state.selectedItems.indexOf(protocoloOriginal);
+        if (selIdx !== -1) {
+          state.selectedItems[selIdx] = novoProtocolo;
+        }
+
+        hasUnsavedChanges = true;
+        state.editingProtocol = null;
+        syncApp();
+
+        showToast("success", "Protocolo Atualizado", `Protocolo ${novoProtocolo} atualizado com sucesso!`);
+        addActivity("edit", `Protocolo editado inline: ${protocoloOriginal} → ${novoProtocolo}`);
+      }
     };
 
     const toggleSelection = (protocoloId, isSelected) => {
@@ -1570,58 +1928,62 @@
       countSpan.textContent = `${state.selectedItems.length} selecionados`;
     };
 
-    const setupFixableField = (inputEl, fixBtn, changeBtn, storageKey) => {
-      const fixValue = () => {
-        const value = inputEl.value.trim();
-        if (!value) {
-          showToast(
-            "warning",
-            "Campo Vazio",
-            `Preencha o campo "${inputEl.labels[0].textContent}" para fixar.`,
-          );
+    // Sistema de Pin/Lock para fixar campos recorrentes (Conferente, Convênio e Data)
+    const setupPinField = (btnEl, inputEl, pinKey) => {
+      if (!btnEl || !inputEl) return;
+
+      const updatePinUI = (isPinned) => {
+        btnEl.classList.toggle("is-pinned", isPinned);
+        btnEl.setAttribute("aria-pressed", String(isPinned));
+        const icon = btnEl.querySelector("i");
+        const text = btnEl.querySelector(".pin-text");
+        if (icon) icon.className = isPinned ? "fas fa-lock" : "fas fa-unlock";
+        if (text) text.textContent = isPinned ? "Fixado" : "Travar";
+        inputEl.classList.toggle("input-pinned", isPinned);
+      };
+
+      const isPinned = state.pins[pinKey] || false;
+      updatePinUI(isPinned);
+
+      if (isPinned) {
+        const savedVal = localStorage.getItem(`${STORAGE_KEYS.pinnedValues}_${pinKey}`);
+        if (savedVal && !inputEl.value) {
+          inputEl.value = savedVal;
+        }
+      }
+
+      btnEl.addEventListener("click", () => {
+        const nextState = !state.pins[pinKey];
+        if (nextState && !inputEl.value) {
+          showToast("warning", "Campo Vazio", "Preencha o campo antes de fixar o valor.");
           inputEl.focus();
           return;
         }
 
-        inputEl.disabled = true;
-        fixBtn.style.display = "none";
-        changeBtn.style.display = "inline-block";
-        localStorage.setItem(storageKey, value);
-
-        showToast(
-          "success",
-          "Campo Fixado",
-          `${inputEl.labels[0].textContent} foi fixado.`,
-        );
-      };
-
-      const changeValue = () => {
-        inputEl.disabled = false;
-        fixBtn.style.display = "inline-block";
-        changeBtn.style.display = "none";
-        localStorage.removeItem(storageKey);
-        inputEl.focus();
-
-        showToast(
-          "info",
-          "Campo Liberado",
-          `${inputEl.labels[0].textContent} foi liberado para edição.`,
-        );
-      };
-
-      const loadFixedValue = () => {
-        const savedValue = localStorage.getItem(storageKey);
-        if (savedValue) {
-          inputEl.value = savedValue;
-          fixValue();
+        state.pins[pinKey] = nextState;
+        localStorage.setItem(STORAGE_KEYS.fieldPins, JSON.stringify(state.pins));
+        if (nextState) {
+          localStorage.setItem(`${STORAGE_KEYS.pinnedValues}_${pinKey}`, inputEl.value);
+        } else {
+          localStorage.removeItem(`${STORAGE_KEYS.pinnedValues}_${pinKey}`);
         }
-      };
+        updatePinUI(nextState);
 
-      fixBtn.addEventListener("click", fixValue);
-      changeBtn.addEventListener("click", changeValue);
-      loadFixedValue();
+        showToast(
+          nextState ? "success" : "info",
+          nextState ? "Campo Fixado" : "Campo Liberado",
+          nextState ? "O valor permanecerá fixo entre os lançamentos." : "O campo agora é variável."
+        );
+      });
+
+      inputEl.addEventListener("change", () => {
+        if (state.pins[pinKey] && inputEl.value) {
+          localStorage.setItem(`${STORAGE_KEYS.pinnedValues}_${pinKey}`, inputEl.value);
+        }
+      });
     };
 
+    // Submissão Rápida com Foco Automático e Limpeza Seletiva (Keyboard-First)
     const adicionarProtocolo = () => {
       const protocolo = elements.numProtocolo.value.trim();
       const convenio = elements.convenio.value;
@@ -1663,15 +2025,23 @@
       };
 
       state.baseDeDados.push(novoItem);
-      elements.numProtocolo.value = "";
+      hasUnsavedChanges = true;
 
+      // Limpa os campos variáveis
+      elements.numProtocolo.value = "";
       if (elements.protocoloFeedback) {
         elements.protocoloFeedback.textContent = "";
         elements.protocoloFeedback.className = "input-feedback";
       }
 
-      salvarDados();
-      aplicarFiltros();
+      // Se o convênio não estiver travado (pin), limpa o campo para forçar nova escolha
+      if (!state.pins.convenio) {
+        elements.convenio.value = "";
+      }
+
+      syncApp();
+
+      // Devolve o foco imediatamente para o primeiro campo de digitação (Keyboard-First)
       elements.numProtocolo.focus();
 
       showToast(
@@ -1704,6 +2074,7 @@
       elements.numProtocolo.addEventListener("input", validateInput);
     };
 
+    // Exportação Excel com Feedback Visual (Disabled + Spinner) e Atualização de Estado
     const gerarExcel = async () => {
       if (state.baseDeDados.length === 0) {
         showToast("warning", "Sem Dados", "Não há protocolos para exportar.");
@@ -1718,12 +2089,18 @@
         showToast(
           "warning",
           "Sem Dados Processados",
-          "Não há protocolos processados para exportar.",
+          "Não há protocolos processados (baixados) para exportar.",
         );
         return;
       }
 
-      LoadingManager.show("Gerando planilha Excel...");
+      const btnExcel = elements.btnGerarExcel;
+      const originalHTML = btnExcel ? btnExcel.innerHTML : "";
+      if (btnExcel) {
+        btnExcel.disabled = true;
+        btnExcel.innerHTML = '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i> Gerando Planilha...';
+      }
+      LoadingManager.show("Gerando planilha Excel formatada...");
 
       try {
         const dataRef =
@@ -1732,7 +2109,7 @@
         const nomeResp = elements.conferente.value || "Não informado";
 
         const workbook = new ExcelJS.Workbook();
-        workbook.creator = "PROTON v1.4";
+        workbook.creator = "PROTON v1.5";
         workbook.created = new Date();
 
         const tiposDoc = {
@@ -1834,7 +2211,6 @@
             "Sem Dados Válidos",
             "Nenhum item com quantidade > 0 foi encontrado.",
           );
-          LoadingManager.hide();
           return;
         }
 
@@ -1850,6 +2226,9 @@
 
         setTimeout(() => URL.revokeObjectURL(link.href), 100);
 
+        // Marca que as alterações foram salvas/exportadas
+        hasUnsavedChanges = false;
+
         showToast("success", "Excel Gerado", "Planilha exportada com sucesso!");
         addActivity(
           "export",
@@ -1864,7 +2243,168 @@
           "Falha ao gerar a planilha Excel. Tente novamente.",
         );
       } finally {
+        if (btnExcel) {
+          btnExcel.disabled = false;
+          btnExcel.innerHTML = originalHTML || '<i class="fas fa-file-excel" aria-hidden="true"></i> Gerar Planilha Excel';
+        }
         LoadingManager.hide();
+      }
+    };
+
+    // Importação Reversa de .xlsx (Lê planilhas geradas pelo Proton e repopula tabela e gráficos)
+    const importarExcel = async (file) => {
+      if (!file) return;
+
+      LoadingManager.show("Lendo e importando planilha Excel...");
+
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.load(arrayBuffer);
+
+        const protocolosImportados = new Map();
+        let dataDetectada = "";
+        let responsavelDetectado = "";
+
+        workbook.eachSheet((worksheet) => {
+          const sheetName = worksheet.name.toLowerCase();
+          let tipoPadrao = "Ambulatorio";
+          if (sheetName.includes("cdi")) tipoPadrao = "CDI";
+          else if (sheetName.includes("ue") || sheetName.includes("ficha")) tipoPadrao = "UE";
+          else if (sheetName.includes("interna")) tipoPadrao = "Internacao";
+          else if (sheetName.includes("ambula")) tipoPadrao = "Ambulatorio";
+
+          const celA2 = String(worksheet.getCell("A2").value || "");
+          const celC2 = String(worksheet.getCell("C2").value || "");
+
+          if (celA2.includes("DATA:")) {
+            const dataMatch = celA2.match(/\d{2}\/\d{2}\/\d{4}/);
+            if (dataMatch && !dataDetectada) {
+              const [d, m, y] = dataMatch[0].split("/");
+              dataDetectada = `${y}-${m}-${d}`;
+            }
+          }
+          if (celC2.includes("RESPONSÁVEL:") && !responsavelDetectado) {
+            responsavelDetectado = celC2.replace("RESPONSÁVEL:", "").trim();
+          }
+
+          worksheet.eachRow((row, rowNumber) => {
+            if (rowNumber < 4) return;
+
+            const rawProto = String(row.getCell(1).value || "").trim();
+            if (!rawProto) return;
+
+            const protoMatch = rawProto.match(/\d+/);
+            if (!protoMatch) return;
+            const numProtocolo = protoMatch[0].padStart(6, "0");
+
+            const rawTipo = String(row.getCell(2).value || "").trim().toUpperCase();
+            let tipo = tipoPadrao;
+            if (rawTipo.startsWith("CDI")) tipo = "CDI";
+            else if (rawTipo.startsWith("UE") || rawTipo.startsWith("FIC")) tipo = "UE";
+            else if (rawTipo.startsWith("INT")) tipo = "Internacao";
+            else if (rawTipo.startsWith("AMB")) tipo = "Ambulatorio";
+
+            const quantidade = parseInt(row.getCell(3).value, 10) || 1;
+            const obs = String(row.getCell(4).value || "").trim();
+
+            if (!protocolosImportados.has(numProtocolo)) {
+              protocolosImportados.set(numProtocolo, {
+                protocolo: numProtocolo,
+                convenio: elements.convenio?.value || "Unimed",
+                status: "Baixado",
+                dataRecebimento: dataDetectada || elements.dataRecebimento?.value || new Date().toISOString().split("T")[0],
+                quantidades: { Ambulatorio: 0, CDI: 0, UE: 0, Internacao: 0 },
+                observacoes: (obs && obs !== "OK") ? obs : "",
+                dataAdicao: new Date().toISOString(),
+                dataConferencia: new Date().toISOString(),
+              });
+            }
+
+            const item = protocolosImportados.get(numProtocolo);
+            item.quantidades[tipo] = (item.quantidades[tipo] || 0) + quantidade;
+            if (obs && obs !== "OK" && !item.observacoes.includes(obs)) {
+              item.observacoes = item.observacoes ? `${item.observacoes}; ${obs}` : obs;
+            }
+          });
+        });
+
+        if (protocolosImportados.size === 0) {
+          showToast("warning", "Planilha Vazia", "Nenhum protocolo válido encontrado na planilha.");
+          return;
+        }
+
+        if (dataDetectada && elements.dataRecebimento) {
+          elements.dataRecebimento.value = dataDetectada;
+        }
+        if (responsavelDetectado && elements.conferente && !elements.conferente.value) {
+          elements.conferente.value = responsavelDetectado;
+        }
+
+        let adicionados = 0;
+        let atualizados = 0;
+
+        protocolosImportados.forEach((novoItem, numProto) => {
+          const itemExistente = state.baseDeDados.find((p) => p.protocolo === numProto);
+          if (itemExistente) {
+            itemExistente.status = "Baixado";
+            itemExistente.quantidades = {
+              Ambulatorio: (itemExistente.quantidades?.Ambulatorio || 0) + novoItem.quantidades.Ambulatorio,
+              CDI: (itemExistente.quantidades?.CDI || 0) + novoItem.quantidades.CDI,
+              UE: (itemExistente.quantidades?.UE || 0) + novoItem.quantidades.UE,
+              Internacao: (itemExistente.quantidades?.Internacao || 0) + novoItem.quantidades.Internacao,
+            };
+            if (novoItem.observacoes) {
+              itemExistente.observacoes = itemExistente.observacoes
+                ? `${itemExistente.observacoes}; ${novoItem.observacoes}`
+                : novoItem.observacoes;
+            }
+            atualizados++;
+          } else {
+            state.baseDeDados.push(novoItem);
+            adicionados++;
+          }
+        });
+
+        hasUnsavedChanges = true;
+        syncApp();
+
+        showToast(
+          "success",
+          "Importação Concluída",
+          `${adicionados} adicionado(s) e ${atualizados} atualizado(s) com sucesso!`
+        );
+        addActivity("restore", "Importação reversa de Excel", `${protocolosImportados.size} protocolos processados`);
+      } catch (err) {
+        console.error("Erro na importação reversa de Excel:", err);
+        showToast("error", "Erro ao Importar", "Falha ao processar arquivo .xlsx. Verifique o formato.");
+      } finally {
+        if (elements.fileImportExcel) elements.fileImportExcel.value = "";
+        LoadingManager.hide();
+      }
+    };
+
+    // Botão Limpar Sessão / Novo Turno
+    const limparSessaoNovoTurno = async () => {
+      const confirmed = await showConfirmModal(
+        "Iniciar Novo Turno?",
+        "Esta ação limpará a lista de protocolos da sessão atual para um novo turno de trabalho. Certifique-se de que exportou os dados para Excel antes de continuar."
+      );
+
+      if (confirmed) {
+        state.baseDeDados = [];
+        state.dadosFiltrados = [];
+        state.selectedItems = [];
+        hasUnsavedChanges = false;
+
+        sessionStorage.removeItem(STORAGE_KEYS.session);
+        localStorage.removeItem(STORAGE_KEYS.database);
+
+        syncApp();
+
+        showToast("success", "Novo Turno Iniciado", "A sessão foi limpa e está pronta para novos lançamentos.");
+        addActivity("clear", "Novo turno iniciado - sessão de protocolos limpa");
+        elements.numProtocolo.focus();
       }
     };
 
@@ -1878,18 +2418,17 @@
         elements.keyboardShortcuts.classList.toggle("visible");
       });
 
-      setupFixableField(
-        elements.conferente,
-        elements.btnFixarConferente,
-        elements.btnTrocarConferente,
-        STORAGE_KEYS.fixedConferente,
-      );
-      setupFixableField(
-        elements.convenio,
-        elements.btnFixarConvenio,
-        elements.btnTrocarConvenio,
-        STORAGE_KEYS.fixedConvenio,
-      );
+      // Inicialização dos botões Pin/Lock de campos recorrentes
+      setupPinField(elements.btnPinConferente, elements.conferente, "conferente");
+      setupPinField(elements.btnPinConvenio, elements.convenio, "convenio");
+      setupPinField(elements.btnPinData, elements.dataRecebimento, "data");
+
+      if (elements.btnFixarConferente) {
+        elements.btnFixarConferente.addEventListener("click", () => elements.btnPinConferente?.click());
+      }
+      if (elements.btnFixarConvenio) {
+        elements.btnFixarConvenio.addEventListener("click", () => elements.btnPinConvenio?.click());
+      }
 
       elements.btnAdicionar.addEventListener("click", adicionarProtocolo);
       elements.numProtocolo.addEventListener("keypress", (e) => {
@@ -1899,23 +2438,43 @@
         }
       });
 
+      // Delegação de eventos centralizada no <tbody> da tabela (Performance & Segurança XSS)
       elements.tabelaCorpo.addEventListener("click", (e) => {
         const button = e.target.closest("button[data-action]");
         if (!button) return;
 
         const action = button.dataset.action;
-        const index = parseInt(button.dataset.index, 10);
+        const protocolo = button.dataset.protocolo;
 
         switch (action) {
-          case "conference":
-            window.protonActions.conferirProtocolo(index);
+          case "conference": {
+            const index = state.baseDeDados.findIndex((p) => p.protocolo === protocolo);
+            if (index !== -1) window.protonActions.conferirProtocolo(index);
             break;
-          case "edit":
-            window.protonActions.editarProtocolo(index);
+          }
+          case "edit-inline": {
+            state.editingProtocol = protocolo;
+            renderizarTabela();
             break;
-          case "delete":
-            window.protonActions.removerProtocolo(index);
+          }
+          case "save-inline": {
+            salvarEdicaoInline(protocolo);
             break;
+          }
+          case "cancel-inline": {
+            state.editingProtocol = null;
+            renderizarTabela();
+            break;
+          }
+          case "edit-conferencia": {
+            const index = state.baseDeDados.findIndex((p) => p.protocolo === protocolo);
+            if (index !== -1) window.protonActions.editarProtocolo(index);
+            break;
+          }
+          case "delete": {
+            window.protonActions.removerProtocolo(protocolo);
+            break;
+          }
         }
       });
 
@@ -1923,6 +2482,20 @@
         if (e.target.classList.contains("row-checkbox")) {
           const protocoloId = e.target.dataset.protocolo;
           toggleSelection(protocoloId, e.target.checked);
+        }
+      });
+
+      elements.tabelaCorpo.addEventListener("keydown", (e) => {
+        if (e.target.classList.contains("table-inline-input") || e.target.classList.contains("table-inline-select")) {
+          const protocolo = e.target.dataset.protocolo;
+          if (e.key === "Enter") {
+            e.preventDefault();
+            salvarEdicaoInline(protocolo);
+          } else if (e.key === "Escape") {
+            e.preventDefault();
+            state.editingProtocol = null;
+            renderizarTabela();
+          }
         }
       });
 
@@ -2010,8 +2583,8 @@
           elements.listaProtocolosLote.value = "";
           closeModal(elements.modalLote);
 
-          salvarDados();
-          aplicarFiltros();
+          hasUnsavedChanges = true;
+          syncApp();
 
           let message = `${adicionados} protocolos adicionados com sucesso.`;
           if (erros > 0) {
@@ -2033,7 +2606,8 @@
         }
       });
 
-      elements.searchInput.addEventListener("input", aplicarFiltros);
+      // Filtro com Debounce de 300ms na digitação para manter a fluidez da UI
+      elements.searchInput.addEventListener("input", debouncedAplicarFiltros);
       elements.filterStatus.addEventListener("change", aplicarFiltros);
       elements.filterConvenio.addEventListener("change", aplicarFiltros);
       elements.filterDate.addEventListener("change", aplicarFiltros);
@@ -2041,6 +2615,7 @@
       elements.btnClearSearch.addEventListener("click", () => {
         elements.searchInput.value = "";
         aplicarFiltros();
+        elements.searchInput.focus();
       });
 
       elements.btnClearFilters.addEventListener("click", () => {
@@ -2053,6 +2628,22 @@
       });
 
       elements.btnGerarExcel.addEventListener("click", gerarExcel);
+
+      // Listeners de Importação Reversa de Excel (.xlsx) e Limpar Sessão / Novo Turno
+      if (elements.btnImportarExcel && elements.fileImportExcel) {
+        elements.btnImportarExcel.addEventListener("click", () => {
+          elements.fileImportExcel.click();
+        });
+        elements.fileImportExcel.addEventListener("change", (e) => {
+          if (e.target.files && e.target.files[0]) {
+            importarExcel(e.target.files[0]);
+          }
+        });
+      }
+
+      if (elements.btnNovoTurno) {
+        elements.btnNovoTurno.addEventListener("click", limparSessaoNovoTurno);
+      }
 
       elements.btnBackup.addEventListener("click", () => {
         try {
@@ -2201,31 +2792,30 @@
         }
       });
 
-      elements.btnLimpar.addEventListener("click", () => {
-        if (
-          confirm(
-            "ATENÇÃO!\n\nEsta ação irá apagar TODOS os protocolos e dados do sistema.\n\nEsta ação NÃO PODE ser desfeita.\n\nDeseja realmente continuar?",
-          )
-        ) {
-          if (
-            confirm(
-              "Última confirmação:\n\nTodos os dados serão perdidos permanentemente.\n\nTem certeza absoluta?",
-            )
-          ) {
-            state.baseDeDados = [];
-            state.atividades = [];
-            state.dadosFiltrados = [];
+      elements.btnLimpar.addEventListener("click", async () => {
+        const confirmed = await showConfirmModal(
+          "Limpar Todos os Dados?",
+          "ATENÇÃO: Esta ação apagará permanentemente TODOS os protocolos e históricos do sistema. Esta ação não pode ser desfeita. Tem certeza que deseja prosseguir?"
+        );
+        if (confirmed) {
+          state.baseDeDados = [];
+          state.atividades = [];
+          state.dadosFiltrados = [];
+          state.selectedItems = [];
+          hasUnsavedChanges = false;
 
-            salvarDados();
-            aplicarFiltros();
+          sessionStorage.removeItem(STORAGE_KEYS.session);
+          localStorage.removeItem(STORAGE_KEYS.database);
+          localStorage.removeItem(STORAGE_KEYS.activities);
 
-            showToast(
-              "success",
-              "Dados Limpos",
-              "Todos os dados foram removidos do sistema.",
-            );
-            addActivity("clear", "Todos os dados foram limpos");
-          }
+          syncApp();
+
+          showToast(
+            "success",
+            "Dados Limpos",
+            "Todos os dados foram removidos do sistema.",
+          );
+          addActivity("clear", "Todos os dados foram limpos");
         }
       });
 
@@ -2497,16 +3087,27 @@
       setupModoRapido();
       setupRelatorio();
       updateTimerDisplay();
-      aplicarFiltros();
       clearSelection();
+
+      // Sincroniza o estado inicial (carrega tabela, contadores, gráfico, etc.)
+      syncApp({ save: false });
 
       if (localStorage.getItem(STORAGE_KEYS.timerRunning) === 'true') {
         startTimer();
       }
 
-      window.addEventListener('beforeunload', () => {
+      // Prevenção de perda acidental ao fechar/recarregar a aba com dados pendentes de exportação
+      window.addEventListener('beforeunload', (e) => {
         localStorage.setItem(STORAGE_KEYS.timerRunning, state.isTimerRunning);
+        if (hasUnsavedChanges && state.baseDeDados.length > 0) {
+          e.preventDefault();
+          e.returnValue = "Você possui protocolos adicionados que ainda não foram exportados para Excel. Deseja realmente sair?";
+          return e.returnValue;
+        }
       });
+
+      // Atualiza metadados da guia de impressão física ao disparar Ctrl + P
+      window.addEventListener("beforeprint", atualizarDadosImpressao);
     };
 
     init();
@@ -2514,6 +3115,7 @@
     return {
       atualizarDashboard,
       aplicarFiltros,
+      syncApp,
       state,
     };
   };
@@ -2682,121 +3284,179 @@
         LoadingManager.show("Gerando relatório PDF...");
 
         const { jsPDF } = window.jspdf;
+        // Configura para A4 default (210 x 297 mm)
         const pdf = new jsPDF();
-
+        
         const pageWidth = pdf.internal.pageSize.getWidth();
         const pageHeight = pdf.internal.pageSize.getHeight();
-        const margin = 20;
+        
+        // --- 1. Header/Banner ---
+        // Fundo do Header (Azul bem escuro para aspecto premium)
+        pdf.setFillColor(15, 23, 42); // slate-900
+        pdf.rect(0, 0, pageWidth, 45, "F");
+        
+        // Linha decorativa
+        pdf.setFillColor(99, 102, 241); // indigo-500
+        pdf.rect(0, 45, pageWidth, 3, "F");
 
-        pdf.setFontSize(20);
-        pdf.setFont(undefined, "bold");
-        pdf.text("RELATÓRIO DE DIGITALIZAÇÃO", pageWidth / 2, 30, {
-          align: "center",
-        });
-
+        // Título PROTON e subtítulo
+        pdf.setTextColor(255, 255, 255);
+        pdf.setFontSize(26);
+        pdf.setFont("helvetica", "bold");
+        pdf.text("PROTON", 20, 28);
+        
         pdf.setFontSize(12);
-        pdf.setFont(undefined, "normal");
+        pdf.setFont("helvetica", "normal");
+        pdf.setTextColor(148, 163, 184); // slate-400
+        pdf.text("RELATÓRIO DE DIGITALIZAÇÃO", 65, 27);
+
+        // --- 2. Data e Hora ---
         const now = new Date();
         const dateStr = now.toLocaleDateString("pt-BR");
         const timeStr = now.toLocaleTimeString("pt-BR");
-        pdf.text(`Data: ${dateStr} - Hora: ${timeStr}`, margin, 50);
-
-        const total = state.ambulatorioCount + state.internacaoCount;
-
+        
+        pdf.setTextColor(100, 116, 139); // slate-500
+        pdf.setFontSize(10);
+        pdf.setFont("helvetica", "bold");
+        pdf.text("DATA DO RELATÓRIO", 20, 65);
+        pdf.text("HORÁRIO", pageWidth - 20, 65, { align: "right" });
+        
+        pdf.setTextColor(15, 23, 42); // slate-900
         pdf.setFontSize(14);
-        pdf.setFont(undefined, "bold");
-        pdf.text("RESUMO DA CONTAGEM:", margin, 70);
+        pdf.setFont("helvetica", "normal");
+        pdf.text(dateStr, 20, 73);
+        pdf.text(timeStr, pageWidth - 20, 73, { align: "right" });
 
-        pdf.setFont(undefined, "normal");
-        pdf.text(`Ambulatório: ${state.ambulatorioCount}`, margin + 10, 85);
-        pdf.text(`Internação: ${state.internacaoCount}`, margin + 10, 100);
+        // Linha divisória suave
+        pdf.setDrawColor(226, 232, 240); // slate-200
+        pdf.line(20, 85, pageWidth - 20, 85);
 
-        pdf.setFont(undefined, "bold");
-        pdf.text(`TOTAL: ${total}`, margin + 10, 120);
+        // --- 3. Cards de Contagem ---
+        const total = state.ambulatorioCount + state.internacaoCount;
+        
+        const cardY = 100;
+        const cardWidth = (pageWidth - 50) / 3;
+        const cardHeight = 40;
+        
+        const drawCard = (x, title, value, hexColor) => {
+          // Extrai rgb do hex
+          const r = parseInt(hexColor.slice(1, 3), 16);
+          const g = parseInt(hexColor.slice(3, 5), 16);
+          const b = parseInt(hexColor.slice(5, 7), 16);
 
+          // Fundo suave e borda
+          pdf.setFillColor(248, 250, 252); // slate-50
+          pdf.setDrawColor(226, 232, 240); // slate-200
+          pdf.roundedRect(x, cardY, cardWidth, cardHeight, 4, 4, "FD");
+          
+          // Tracinho colorido no topo do card
+          pdf.setFillColor(r, g, b);
+          pdf.roundedRect(x, cardY, cardWidth, 4, 4, 4, "F");
+          // Conserta parte inferior do tracinho
+          pdf.rect(x, cardY + 2, cardWidth, 2, "F");
+
+          pdf.setTextColor(100, 116, 139); // slate-500
+          pdf.setFontSize(10);
+          pdf.setFont("helvetica", "bold");
+          pdf.text(title, x + cardWidth / 2, cardY + 16, { align: "center" });
+          
+          pdf.setTextColor(15, 23, 42); // slate-900
+          pdf.setFontSize(22);
+          pdf.setFont("helvetica", "bold");
+          pdf.text(String(value), x + cardWidth / 2, cardY + 32, { align: "center" });
+        };
+
+        const corAmb = getCssVariable("--cor-ambulatório") || "#10b981";
+        const corInt = getCssVariable("--cor-internação") || "#667eea";
+        const corTotal = "#334155"; // slate-700
+
+        drawCard(20, "AMBULATÓRIO", state.ambulatorioCount, corAmb);
+        drawCard(20 + cardWidth + 5, "INTERNAÇÃO", state.internacaoCount, corInt);
+        drawCard(20 + (cardWidth * 2) + 10, "TOTAL PROCESSADO", total, corTotal);
+
+        // --- 4. Gráfico ---
         if (total > 0) {
+          pdf.setTextColor(15, 23, 42);
+          pdf.setFontSize(14);
+          pdf.setFont("helvetica", "bold");
+          pdf.text("Distribuição Visual", 20, 165);
+        
           const tempCanvas = document.createElement("canvas");
-          tempCanvas.width = 400;
-          tempCanvas.height = 400;
+          // Resolução maior para melhor qualidade no PDF
+          tempCanvas.width = 600;
+          tempCanvas.height = 350;
           const tempCtx = tempCanvas.getContext("2d");
-
-          const ambulatorioColorPDF = getCssVariable("--cor-ambulatório");
-          const internacaoColorPDF = getCssVariable("--cor-internação");
+          
           const tempChart = new Chart(tempCtx, {
             type: "doughnut",
             data: {
-              labels: ["Ambulatório", "Internação"],
-              datasets: [
-                {
-                  label: "Quantidade",
-                  data: [state.ambulatorioCount, state.internacaoCount],
-                  backgroundColor: [ambulatorioColorPDF, internacaoColorPDF],
-                  borderColor: "#ffffff",
-                  borderWidth: 3,
-                },
-              ],
+              labels: [" Ambulatório", " Internação"],
+              datasets: [{
+                data: [state.ambulatorioCount, state.internacaoCount],
+                backgroundColor: [corAmb, corInt],
+                borderColor: "#ffffff",
+                borderWidth: 4,
+                hoverOffset: 0
+              }]
             },
             options: {
               responsive: false,
               maintainAspectRatio: false,
+              devicePixelRatio: 2, // Maior nitidez
               plugins: {
                 legend: {
-                  position: "bottom",
+                  position: "right",
                   labels: {
-                    color: "#000000",
-                    padding: 20,
+                    color: "#334155",
+                    padding: 30,
                     usePointStyle: true,
-                    font: {
-                      size: 16,
-                      weight: "bold",
-                    },
-                  },
+                    pointStyle: "circle",
+                    font: { size: 24, family: "helvetica", weight: "bold" }
+                  }
                 },
-                whiteBackground: {
-                  enabled: true,
-                },
+                whiteBackground: { enabled: true } // Utiliza plugin existente no Proton
               },
-              elements: {
-                arc: {
-                  borderWidth: 3,
-                },
-              },
+              cutout: "65%"
             },
-            plugins: [whiteBackgroundPlugin],
+            plugins: [whiteBackgroundPlugin]
           });
 
-          await new Promise((resolve) => setTimeout(resolve, 500));
+          // Aguarda renderização
+          await new Promise((resolve) => setTimeout(resolve, 600));
 
           const chartImage = tempCanvas.toDataURL("image/png", 1.0);
-          const imgWidth = 100;
-          const imgHeight = 100;
+          
+          const imgWidth = 150;
+          const imgHeight = 87.5; // (350/600) * 150
           const imgX = (pageWidth - imgWidth) / 2;
-          const imgY = 140;
+          const imgY = 175;
 
           pdf.addImage(chartImage, "PNG", imgX, imgY, imgWidth, imgHeight);
-
           tempChart.destroy();
+        } else {
+          pdf.setTextColor(148, 163, 184);
+          pdf.setFontSize(12);
+          pdf.setFont("helvetica", "italic");
+          pdf.text("Nenhum documento contabilizado até o momento.", pageWidth / 2, 190, { align: "center" });
         }
 
-        pdf.setFontSize(10);
-        pdf.setFont(undefined, "italic");
-        pdf.text(
-          "Gerado por PROTON v1.4 - Sistema de Controle de Protocolos",
-          pageWidth / 2,
-          pageHeight - 20,
-          { align: "center" },
-        );
+        // --- 5. Footer ---
+        pdf.setFillColor(241, 245, 249); // slate-100
+        pdf.rect(0, pageHeight - 25, pageWidth, 25, "F");
+        
+        pdf.setTextColor(100, 116, 139); // slate-500
+        pdf.setFontSize(9);
+        pdf.setFont("helvetica", "normal");
+        pdf.text("Relatório gerado automaticamente por PROTON v1.5", pageWidth / 2, pageHeight - 11, { align: "center" });
 
-        pdf.save(`relatorio-digitalizacao-${dateStr.replace(/\//g, "-")}.pdf`);
+        // --- Salva Documento ---
+        const sanitizedDate = dateStr.replace(/\//g, "-").replace(/:/g, "");
+        pdf.save(`PROTON_Digitalizacao_${sanitizedDate}.pdf`);
 
-        showToast(
-          "success",
-          "PDF Gerado",
-          "Relatório foi gerado e baixado com sucesso!",
-        );
+        showToast("success", "Relatório PDF Gerado", "O design premium foi aplicado com sucesso!");
       } catch (error) {
         console.error("Erro ao gerar PDF:", error);
-        showToast("error", "Erro no PDF", "Falha ao gerar o relatório PDF.");
+        showToast("error", "Falha na Exportação", "Ocorreu um erro ao gerar o PDF.");
       } finally {
         LoadingManager.hide();
       }
