@@ -1,0 +1,79 @@
+/* === CONTADOR MANUAL === */
+/* --- 28. Counter Tab --- */
+#tab-contador .main-content {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    flex-wrap: wrap;
+    margin: 30px 0;
+    gap: 20px;
+}
+
+#tab-contador .counter-card {
+    background-color: var(--cor-container);
+    border: 2px solid var(--cor-borda);
+    border-radius: var(--radius-card);
+    padding: 30px 20px;
+    text-align: center;
+    min-width: 180px;
+    box-shadow: var(--sombra-card);
+    transition: var(--transicao-padrao);
+}
+
+#tab-contador .counter-card:hover { transform: translateY(-4px); box-shadow: var(--sombra-hover); }
+
+#ambulatorio-card { border-color: var(--cor-ambulatório); }
+#internacao-card  { border-color: var(--cor-internação); }
+#total-card       { border-color: var(--cor-total); }
+
+#tab-contador .counter-card h2 {
+    margin: 0 0 15px 0;
+    font-size: 1.1rem;
+    color: var(--cor-texto);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+#tab-contador .count {
+    font-size: 3rem;
+    font-weight: 800;
+    margin: 15px 0;
+    color: var(--cor-texto);
+    line-height: 1;
+}
+
+#ambulatorio-card .count { color: var(--cor-ambulatório); }
+#internacao-card .count  { color: var(--cor-internação); }
+#total-card .count       { color: var(--cor-total); }
+
+.counter-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 15px;
+}
+
+.counter-buttons button {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transicao-padrao);
+}
+
+.chart-container {
+    width: 300px;
+    height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--cor-container);
+    border-radius: var(--radius-card);
+    border: 1px solid var(--cor-borda);
+    box-shadow: var(--sombra-card);
+}

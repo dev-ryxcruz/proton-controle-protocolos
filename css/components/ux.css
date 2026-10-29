@@ -1,0 +1,33 @@
+/* === UX ENHANCEMENTS === */
+/* --- 24. Scroll to Top --- */
+.scroll-to-top {
+    position: fixed;
+    bottom: 80px;
+    right: 24px;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: var(--gradiente-primario);
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    box-shadow: var(--sombra-hover);
+    z-index: 990;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(20px);
+    transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+    padding: 0;
+}
+
+.scroll-to-top.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.scroll-to-top:hover { transform: translateY(-4px) scale(1.05); box-shadow: 0 12px 20px rgba(79,110,247,.35); }

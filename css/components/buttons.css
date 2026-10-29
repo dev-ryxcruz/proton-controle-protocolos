@@ -1,0 +1,169 @@
+/* === BUTTONS & ACTIONS === */
+/* --- 12. Buttons base --- */
+.actions, .actions-area {
+    margin-top: 20px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+button, .btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: var(--radius-input);
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    transition: var(--transicao-padrao);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    overflow: hidden;
+    font-family: inherit;
+    white-space: nowrap;
+}
+
+/* Ripple effect */
+button .ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.35);
+    transform: scale(0);
+    animation: ripple-anim 0.55s linear;
+    pointer-events: none;
+}
+
+@keyframes ripple-anim {
+    to { transform: scale(4); opacity: 0; }
+}
+
+button:hover, .btn:hover { transform: translateY(-2px); box-shadow: var(--sombra-hover); }
+button:active, .btn:active { transform: translateY(0); }
+button:disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; }
+
+.btn-primary   { background: var(--gradiente-primario); color: white; }
+.btn-secondary { background-color: #64748b; color: white; padding: 10px 20px; font-size: 14px; }
+.btn-secondary:hover { background-color: #475569; }
+.btn-success   { background: var(--gradiente-sucesso); color: white; }
+.btn-danger    { background-color: var(--cor-perigo); color: white; }
+.btn-danger:hover { background-color: var(--cor-perigo-hover); }
+.btn-warning   { background-color: var(--cor-aviso); color: white; }
+.btn-warning:hover { background-color: var(--cor-aviso-hover); }
+.btn-info      { background-color: var(--cor-info); color: white; }
+.btn-info:hover { background-color: var(--cor-info-hover); }
+
+.btn-show-history { margin-top: 20px; }
+
+
+/* --- Botões de Trava / Pin de Campos Recorrentes --- */
+.btn-pin {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: transparent;
+    border: 1px solid var(--cor-borda);
+    color: #64748b;
+    padding: 8px 14px;
+    border-radius: var(--radius-input);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: var(--transicao-padrao);
+    flex-shrink: 0;
+    user-select: none;
+}
+
+.btn-pin:hover {
+    background: rgba(79, 110, 247, 0.08);
+    color: var(--cor-primaria);
+    border-color: var(--cor-primaria);
+}
+
+.btn-pin.is-pinned {
+    background: rgba(16, 185, 129, 0.12);
+    color: var(--cor-sucesso);
+    border-color: var(--cor-sucesso);
+    box-shadow: 0 0 0 1px var(--cor-sucesso);
+}
+
+.btn-pin.is-pinned i {
+    color: var(--cor-sucesso);
+}
+
+.input-pinned {
+    border-color: var(--cor-sucesso) !important;
+    background-color: rgba(16, 185, 129, 0.04) !important;
+}
+
+html.dark-mode .btn-pin {
+    color: #94a3b8;
+    border-color: var(--cor-borda);
+}
+
+html.dark-mode .btn-pin:hover {
+    background: rgba(124, 140, 248, 0.15);
+    color: var(--cor-primaria);
+}
+
+html.dark-mode .btn-pin.is-pinned {
+    background: rgba(52, 211, 153, 0.15);
+    color: var(--cor-sucesso);
+    border-color: var(--cor-sucesso);
+}
+
+/* --- Novos Botões de Ação (Importar Excel & Novo Turno) --- */
+.btn-outline-excel {
+    background: transparent;
+    border: 2px solid var(--cor-sucesso);
+    color: var(--cor-sucesso);
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 10px 18px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    transition: var(--transicao-padrao);
+}
+
+.btn-outline-excel:hover {
+    background: var(--cor-sucesso);
+    color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.btn-novo-turno {
+    background: linear-gradient(135deg, #0ea5e9, #0284c7);
+    color: #ffffff;
+    border: none;
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 10px 18px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    transition: var(--transicao-padrao);
+}
+
+.btn-novo-turno:hover {
+    filter: brightness(1.1);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.35);
+}
+
+/* Feedback de Carregamento na Exportação */
+.btn-success:disabled,
+.btn-outline-excel:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}

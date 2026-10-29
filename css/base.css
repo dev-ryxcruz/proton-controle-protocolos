@@ -1,0 +1,41 @@
+/* === BASE & LAYOUT === */
+/* --- 2. Reset & Base --- */
+* { box-sizing: border-box; }
+
+body {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--cor-fundo);
+    margin: 0;
+    padding: 20px;
+    color: var(--cor-texto);
+    transition: background 0.4s ease, color 0.4s ease;
+    line-height: 1.6;
+    min-height: 100vh;
+}
+
+/* --- 3. Loading Overlay --- */
+.loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--cor-fundo);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    transition: opacity 0.5s ease;
+}
+
+.loading-spinner { text-align: center; color: var(--cor-primaria); }
+.loading-spinner i { font-size: 3rem; margin-bottom: 1rem; display: block; }
+.loading-spinner p { font-size: 1.1rem; font-weight: 600; margin: 0; }
+
+/* --- 4. Container --- */
+.container {
+    max-width: 1400px;
+    margin: auto;
+    background: var(--cor-container);
+    padding: 32px;
+    border-radius: var(--radius-card);
+    box-shadow: var(--sombra-card);
+    transition: var(--transicao-padrao);
+}

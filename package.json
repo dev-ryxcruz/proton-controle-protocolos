@@ -1,0 +1,21 @@
+{
+  "name": "proton-controle-protocolos",
+  "version": "1.5.0",
+  "description": "Sistema client-side de controle de protocolos e digitalização de documentos",
+  "type": "module",
+  "scripts": {
+    "start": "npx serve .",
+    "dev": "npx serve .",
+    "verify": "node scripts/verify.js"
+  },
+  "keywords": [
+    "vanilla-js",
+    "productivity",
+    "exceljs",
+    "chartjs",
+    "protocols"
+  ],
+  "author": "Ryan Cristian",
+  "license": "MIT"
+}
+

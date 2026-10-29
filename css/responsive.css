@@ -1,0 +1,115 @@
+/* === RESPONSIVE & ACCESSIBILITY === */
+/* --- 32. Accessibility --- */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+.indicator-symbol:focus-visible {
+    outline: 2px solid var(--cor-primaria);
+    outline-offset: 2px;
+}
+
+/* --- 33. Responsive --- */
+@media (max-width: 768px) {
+    body { padding: 10px; }
+    .container { padding: 16px; }
+    .header { margin: -16px -16px 16px -16px; padding: 16px; flex-direction: column; text-align: center; gap: 16px; border-radius: var(--radius-card) var(--radius-card) 0 0; }
+    .header-controls { justify-content: center; }
+    .productivity-timer { min-width: auto; }
+    .form-grid { grid-template-columns: 1fr; }
+    .input-group { flex-direction: column; align-items: stretch; }
+    .filters-grid { grid-template-columns: 1fr; }
+    .dashboard { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+    .actions, .actions-area { flex-direction: column; }
+    .keyboard-shortcuts { left: 10px; right: 10px; width: auto; min-width: auto; max-width: none; }
+    .toast-container { left: 10px; right: 10px; }
+    .toast { min-width: auto; max-width: none; }
+    .modal-content { margin: 10px; width: calc(100% - 20px); }
+    #tab-contador .main-content { flex-direction: column; }
+    .chart-container { width: 250px; height: 250px; }
+    .action-buttons { flex-direction: column; }
+    .action-buttons button { width: 100%; }
+    .legend-items { justify-content: center; gap: 12px; }
+    .legend-item { font-size: 12px; }
+    .protocol-indicators { gap: 4px; }
+    .indicator-symbol { width: 20px; height: 20px; font-size: 10px; }
+    .scroll-to-top { bottom: 70px; right: 16px; width: 40px; height: 40px; }
+    .footer-content { flex-direction: column; gap: 8px; }
+
+    /* Tabela em Cards Mobile */
+    thead { display: none; }
+
+    tbody tr {
+        display: block;
+        background: var(--cor-container);
+        border: 1px solid var(--cor-borda);
+        border-radius: 12px;
+        margin-bottom: 16px;
+        box-shadow: var(--sombra-card);
+        padding: 16px;
+    }
+
+    tbody td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--cor-borda);
+        text-align: right;
+        font-size: 14px;
+    }
+
+    tbody td:last-child { border-bottom: none; justify-content: center; margin-top: 10px; }
+
+    tbody td::before {
+        content: attr(data-label);
+        font-weight: 700;
+        color: var(--cor-primaria);
+        text-transform: uppercase;
+        font-size: 11px;
+        margin-right: 15px;
+        text-align: left;
+    }
+
+    .checkbox-cell { justify-content: flex-start; }
+    .protocol-cell { flex-direction: row; width: 100%; justify-content: flex-end; }
+}
+
+@media (max-width: 480px) {
+    .header h1 { font-size: 1.6rem; }
+    .header-logo { height: 36px; }
+    .productivity-timer { font-size: 13px; padding: 6px 12px; }
+    .stat-card p { font-size: 2.2rem; }
+    #tab-contador .count { font-size: 2.5rem; }
+    .counter-buttons button { width: 44px; height: 44px; font-size: 1rem; }
+    .chart-container { width: 220px; height: 220px; }
+    .legend-container { padding: 14px; }
+    .empty-state-icon { width: 90px; height: 90px; }
+}
+
+/* --- 34. Reduced Motion --- */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    .indicator-symbol:hover { transform: none; }
+    .empty-circle { animation: none; }
+    [data-animate] { opacity: 1; transform: none; }
+}
+
+/* --- 35. High Contrast --- */
+@media (prefers-contrast: high) {
+    :root {
+        --cor-borda: #000000;
+        --sombra-card: 0 0 0 1px #000000;
+        --sombra-hover: 0 0 0 2px #000000;
+    }
+
+    html.dark-mode {
+        --cor-borda: #ffffff;
+        --sombra-card: 0 0 0 1px #ffffff;
+        --sombra-hover: 0 0 0 2px #ffffff;
+    }
+}

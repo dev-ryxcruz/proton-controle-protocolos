@@ -1,0 +1,33 @@
+/* ============================================================
+   PROTON v1.4 - Master Stylesheet
+   Imports all modular stylesheets in architectural cascade order
+   ============================================================ */
+
+/* 1. Design Tokens & Base */
+@import url('./variables.css');
+@import url('./base.css');
+
+/* 2. Layout */
+@import url('./layout/header.css');
+@import url('./layout/tabs.css');
+@import url('./layout/footer.css');
+
+/* 3. Core Components */
+@import url('./components/buttons.css');
+@import url('./components/cards.css');
+@import url('./components/forms.css');
+@import url('./components/table.css');
+@import url('./components/modals.css');
+@import url('./components/toasts.css');
+@import url('./components/palette.css');
+@import url('./components/timer.css');
+@import url('./components/contador.css');
+@import url('./components/ux.css');
+@import url('./components/easteregg.css');
+
+/* 4. Responsive & Accessibility */
+@import url('./responsive.css');
+
+/* 5. Print Mode */
+@import url('./print.css');
+

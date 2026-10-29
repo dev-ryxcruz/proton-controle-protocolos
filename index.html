@@ -12,12 +12,12 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style">
-    <link rel="preload" href="style.css" as="style">
+    <link rel="preload" href="css/main.css" as="style">
 
     <!-- Google Fonts: Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
     <!-- Loading overlay -->
@@ -574,11 +574,13 @@
     <!-- Hidden file input for restore -->
     <input type="file" id="fileRestore" accept=".json" style="display: none;" aria-label="Selecionar arquivo de backup">
 
-    <!-- Scripts -->
+    <!-- Bibliotecas Externas via CDN -->
     <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
-    <script src="script.js" defer></script>
+
+    <!-- Módulo Principal ES6 (Modern Vanilla JS) -->
+    <script type="module" src="js/app.js"></script>
 
     <footer class="footer">
         <div class="footer-content">

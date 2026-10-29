@@ -1,0 +1,292 @@
+/* === TABLE & DATA GRID === */
+/* --- 16. Protocol Cell & Indicators --- */
+.protocol-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 40px;
+}
+
+.protocol-number { font-weight: 700; font-size: 15px; color: var(--cor-texto); }
+
+.protocol-indicators { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+.indicator-symbol {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: bold;
+    color: white;
+    position: relative;
+    cursor: help;
+    transition: var(--transicao-padrao);
+    flex-shrink: 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,.15);
+}
+
+.indicator-symbol:hover {
+    transform: scale(1.15);
+    box-shadow: 0 4px 8px rgba(0,0,0,.25);
+}
+
+.indicator-amb { background: var(--cor-ambulatório); }
+.indicator-cdi { background: var(--cor-tipo-cdi); }
+.indicator-ue  { background: var(--cor-tipo-ue); }
+.indicator-int { background: var(--cor-internação); }
+.indicator-obs { background: var(--cor-observacao-simbolo); font-size: 12px; }
+
+/* Tooltip para símbolos */
+.indicator-symbol:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    top: 130%;
+    bottom: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,.92);
+    color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 9999;
+    animation: fadeInTooltipDown 0.2s ease-in;
+    pointer-events: none;
+    font-weight: 500;
+    box-shadow: 0 4px 6px rgba(0,0,0,.3);
+}
+
+.indicator-symbol:hover::before {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: transparent;
+    border-bottom-color: rgba(0,0,0,.92);
+    z-index: 9999;
+    pointer-events: none;
+}
+
+@keyframes fadeInTooltipDown {
+    from { opacity: 0; transform: translateX(-50%) translateY(-5px); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+
+/* --- 19. Table --- */
+.table-container {
+    background: var(--cor-container);
+    border-radius: 12px;
+    overflow: visible;
+    border: 1px solid var(--cor-borda);
+    box-shadow: var(--sombra-card);
+    margin-bottom: 24px;
+}
+
+.table-wrapper { overflow-x: auto; }
+
+table { width: 100%; border-collapse: collapse; min-width: 700px; }
+
+th, td {
+    padding: 14px 16px;
+    text-align: left;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--cor-borda);
+}
+
+th {
+    background-color: var(--cor-cabecalho-tabela);
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--cor-texto);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.sort-btn {
+    background: none;
+    border: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0;
+    transition: var(--transicao-padrao);
+}
+
+.sort-btn:hover { color: var(--cor-primaria); }
+.sort-icon { opacity: 0.5; transition: var(--transicao-padrao); }
+.sort-btn.active .sort-icon { opacity: 1; color: var(--cor-primaria); }
+
+tbody tr { transition: var(--transicao-padrao); }
+tbody tr:hover { background-color: var(--cor-setup); }
+
+.status-baixado { background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%) !important; }
+
+html.dark-mode .status-baixado,
+html.dark-mode tbody tr.selected {
+    background: linear-gradient(135deg, #064e3b 0%, #065f46 100%) !important;
+}
+
+.status-baixado .status-display { color: #065f46; font-weight: 700; }
+html.dark-mode .status-baixado .status-display { color: #6ee7b7; }
+
+.checkbox-cell { width: 40px; text-align: center; padding: 0 16px; }
+.checkbox-cell input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
+
+/* --- 20. Bulk Actions Bar --- */
+.bulk-actions-bar {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--cor-container);
+    padding: 16px 24px;
+    border-radius: 12px;
+    box-shadow: var(--sombra-hover);
+    z-index: 998;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    border: 1px solid var(--cor-borda);
+    animation: modalSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* --- 21. Action Buttons (tabela) --- */
+.action-buttons { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.action-buttons button { font-size: 12px; padding: 6px 12px; border-radius: 6px; }
+
+/* --- 22. Empty State animado --- */
+.empty-state {
+    text-align: center;
+    padding: 48px 20px;
+    color: #64748b;
+    background: var(--cor-setup);
+    border-radius: 16px;
+    border: 1px dashed var(--cor-borda);
+    margin: 24px 0;
+}
+
+.empty-state-icon {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 20px;
+    color: var(--cor-primaria);
+    opacity: 0.5;
+}
+
+.empty-state-icon svg { width: 100%; height: 100%; }
+
+.empty-circle {
+    animation: spin-slow 20s linear infinite;
+    transform-origin: 60px 60px;
+}
+
+@keyframes spin-slow {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+.empty-state-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--cor-texto);
+    margin: 0 0 8px 0;
+}
+
+.empty-state-desc {
+    font-size: 14px;
+    color: #64748b;
+    margin: 0;
+    max-width: 340px;
+    margin-inline: auto;
+    line-height: 1.7;
+}
+
+/* --- 23. Activity History --- */
+.activity-history-panel {
+    margin-top: 20px;
+    background: var(--cor-setup);
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid var(--cor-borda);
+}
+
+
+/* --- Edição Inline na Tabela de Protocolos --- */
+tr.row-editing {
+    background-color: rgba(79, 110, 247, 0.08) !important;
+    box-shadow: inset 0 0 0 2px var(--cor-primaria);
+}
+
+.table-inline-input,
+.table-inline-select {
+    width: 100%;
+    padding: 7px 10px;
+    border: 1px solid var(--cor-primaria);
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 13px;
+    background: var(--cor-container);
+    color: var(--cor-texto);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(79, 110, 247, 0.15);
+    transition: var(--transicao-padrao);
+}
+
+.table-inline-input:focus,
+.table-inline-select:focus {
+    border-color: var(--cor-primaria-hover);
+    box-shadow: 0 0 0 3px rgba(79, 110, 247, 0.3);
+}
+
+/* Botões da ação inline */
+.action-buttons .btn-save-inline {
+    background: var(--cor-sucesso);
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 10px;
+    cursor: pointer;
+    transition: var(--transicao-padrao);
+}
+.action-buttons .btn-save-inline:hover {
+    background: var(--cor-sucesso-hover);
+    transform: scale(1.05);
+}
+
+.action-buttons .btn-cancel-inline {
+    background: #64748b;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 10px;
+    cursor: pointer;
+    transition: var(--transicao-padrao);
+}
+.action-buttons .btn-cancel-inline:hover {
+    background: #475569;
+    transform: scale(1.05);
+}
+
+/* Badge estilizado do convênio */
+.badge-convenio {
+    display: inline-block;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}

@@ -1,0 +1,53 @@
+/* === FOOTER === */
+/* --- 29. Footer --- */
+.footer {
+    margin-top: 40px;
+    padding: 20px 32px;
+    border-top: 1px solid var(--cor-borda);
+    background: var(--cor-setup);
+    border-radius: 0 0 var(--radius-card) var(--radius-card);
+}
+
+.footer-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    color: #94a3b8;
+    font-size: 13px;
+}
+
+.footer-logo-text {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    color: var(--cor-primaria);
+    font-size: 14px;
+}
+
+.footer-logo-img { height: 20px; width: auto; opacity: 0.8; }
+
+.footer-version {
+    background: var(--gradiente-primario);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
+    font-size: 12px;
+}
+
+.footer-divider { opacity: 0.4; }
+
+.footer-link {
+    color: var(--cor-primaria);
+    text-decoration: none;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: var(--transicao-padrao);
+}
+
+.footer-link:hover { opacity: 0.75; text-decoration: underline; }

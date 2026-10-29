@@ -1,0 +1,197 @@
+/* === PRINT & PHYSICAL RECEIPT GUIDE === */
+/* --- Bloco de Assinaturas (Oculto em tela normal) --- */
+.print-footer-signature {
+    display: none;
+}
+
+/* ============================================================
+   MODO DE IMPRESSÃO / GUIA FÍSICA (@media print)
+   ============================================================ */
+@media print {
+    /* Configuração da folha impressa */
+    @page {
+        margin: 1.5cm;
+        size: A4 portrait;
+    }
+
+    body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        font-size: 11pt !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* Ocultar elementos desnecessários na guia impressa */
+    #loadingOverlay,
+    .toast-container,
+    .keyboard-shortcuts,
+    .header-controls,
+    .tabs,
+    .setup-section,
+    .search-filters,
+    .legend-container,
+    .dashboard,
+    .actions,
+    .bulk-actions-bar,
+    .btn-show-history,
+    #activityHistory,
+    .scroll-to-top,
+    .modal,
+    #tab-contador,
+    .footer,
+    .chart-card,
+    .progress-bar-container,
+    th.checkbox-cell,
+    td.checkbox-cell,
+    th:last-child,
+    td:last-child,
+    .sort-icon,
+    #btnModoRapido,
+    #btnShowShortcuts {
+        display: none !important;
+    }
+
+    /* Container limpo sem bordas e sombras */
+    .container {
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+        border: none !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+    }
+
+    /* Cabeçalho impresso com a logo do Proton */
+    .header {
+        position: static !important;
+        background: none !important;
+        padding: 0 0 15px 0 !important;
+        margin: 0 0 20px 0 !important;
+        border-bottom: 2px solid #1e293b !important;
+        box-shadow: none !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+    }
+
+    .header .logo-title {
+        font-size: 22pt !important;
+        color: #0f172a !important;
+        font-weight: 800 !important;
+    }
+
+    .header-logo {
+        height: 52px !important;
+        filter: none !important;
+    }
+
+    /* Tabela de Protocolos para Impressão */
+    .table-container {
+        box-shadow: none !important;
+        border: none !important;
+        margin-bottom: 25px !important;
+    }
+
+    .table-wrapper {
+        overflow: visible !important;
+        box-shadow: none !important;
+        border: none !important;
+    }
+
+    table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        color: #000000 !important;
+        font-size: 10pt !important;
+    }
+
+    table th,
+    table td {
+        border: 1px solid #cbd5e1 !important;
+        padding: 8px 10px !important;
+        color: #0f172a !important;
+        background: transparent !important;
+    }
+
+    table th {
+        background-color: #f1f5f9 !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        font-size: 9pt !important;
+        letter-spacing: 0.05em !important;
+    }
+
+    /* Badges de convênio e indicadores impressos */
+    .badge-convenio {
+        background: transparent !important;
+        color: #000000 !important;
+        border: 1px solid #64748b !important;
+        font-weight: 600 !important;
+        padding: 2px 6px !important;
+    }
+
+    .indicator-symbol {
+        border: 1px solid #333333 !important;
+        background: transparent !important;
+        color: #000000 !important;
+    }
+
+    .status-display i {
+        display: none !important;
+    }
+
+    tr {
+        page-break-inside: avoid !important;
+    }
+
+    /* Rodapé com Guia Física e Assinaturas */
+    .print-footer-signature {
+        display: block !important;
+        margin-top: 30px !important;
+        page-break-inside: avoid !important;
+    }
+
+    .print-meta-info {
+        display: grid !important;
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 15px !important;
+        padding: 12px 0 !important;
+        border-top: 1px dashed #94a3b8 !important;
+        border-bottom: 1px dashed #94a3b8 !important;
+        margin-bottom: 45px !important;
+        font-size: 9.5pt !important;
+        color: #334155 !important;
+    }
+
+    .print-meta-info strong {
+        color: #0f172a !important;
+    }
+
+    .print-signature-boxes {
+        display: flex !important;
+        justify-content: space-between !important;
+        gap: 50px !important;
+        margin-top: 50px !important;
+    }
+
+    .signature-box {
+        flex: 1 !important;
+        text-align: center !important;
+    }
+
+    .signature-line {
+        border-bottom: 1px solid #000000 !important;
+        margin-bottom: 8px !important;
+        height: 1px !important;
+    }
+
+    .signature-box p {
+        font-size: 9.5pt !important;
+        color: #1e293b !important;
+        margin: 0 !important;
+        font-weight: 600 !important;
+    }
+}
